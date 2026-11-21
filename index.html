@@ -1,0 +1,1046 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>나에게 묻는 질문</title>
+<meta name="description" content="85살의 나, 5년 뒤의 나와 대화하며 스스로 답을 찾는 자기대화 앱">
+<meta name="theme-color" content="#26305a">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta property="og:title" content="나에게 묻는 질문">
+<meta property="og:description" content="85살의 나는 지금의 나에게 뭐라고 할까?">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+/* VOICE: tender, quiet, reflective — a late-night talk with yourself
+   IDEA: a messenger thread with another you, across time
+   PICTURE: the question list, then the chat room / game scene; the time-travel sequence
+   COLOUR and TYPE: dusk blue field, persimmon coral accent, sky support; Nanum Gothic throughout
+   LAYOUT: single calm column, top bar with expression switch at right, full-screen conversation */
+:root{color-scheme:light dark;--f:"Nanum Gothic",system-ui,sans-serif;
+--bg:light-dark(#f6f5f1,#11131d);--ink:light-dark(#1d1e2a,#eceaf3);--mute:light-dark(#5e6077,#a4a6bb);
+--card:light-dark(#ffffff,#1b1e2c);--line:light-dark(#e3e1ea,#2a2e40);
+--dusk:#26305a;--dusk2:#1b2244;--coral:#ff7a59;--sky:#a9c8ea;
+--chat:light-dark(#dde5ef,#151927);--mine:#ffb59f;--mineink:#2a1a14}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 var(--f);overflow-x:clip}
+button,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--coral);outline-offset:2px}
+.hide{display:none!important}
+
+.top{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:8px;padding:10px max(4vw,12px);background:var(--dusk);color:#fff}
+.brand{font-weight:800;font-size:17px;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tbtn{min-height:40px;padding:0 14px;border:1px solid #ffffff40;border-radius:999px;background:#ffffff14;color:#fff;font-size:13px;font-weight:700}
+
+/* sliding switches */
+.sw{position:relative;display:grid;grid-template-columns:1fr 1fr;border-radius:999px;padding:3px;border:1px solid #ffffff40;background:#ffffff1a}
+.sw button{position:relative;z-index:1;border:0;background:none;color:#fff;font-size:13px;font-weight:800;padding:0 12px;min-height:34px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color .3s}
+.sw .knob{position:absolute;top:3px;bottom:3px;left:3px;width:calc(50% - 3px);border-radius:999px;background:var(--coral);transition:transform .35s cubic-bezier(.3,1.4,.5,1),background .35s}
+.sw[data-v=b] .knob{transform:translateX(100%);background:var(--sky)}
+.sw button[aria-pressed=true]{color:#1d1e2a}
+.swlab{font-size:11px;color:#c9d1ee;margin-right:-2px;white-space:nowrap}
+
+.hero{background:var(--dusk);color:#fff;padding:22px max(5vw,16px) 30px}
+.hero h1{margin:0 0 6px;font-weight:800;font-size:clamp(28px,6vw,40px);line-height:1.2;text-wrap:balance}
+.hero p{margin:0;color:#d6dcf2;max-width:36em}
+.aihint{display:block;width:100%;margin-top:16px;min-height:44px;text-align:left;border:1px dashed #ffffff55;border-radius:14px;background:transparent;color:#d6dcf2;padding:10px 14px;font-size:14px}
+.ask{margin-top:18px;background:#ffffff12;border:1px solid #ffffff2a;border-radius:16px;padding:14px}
+.ask label{display:block;font-size:14px;color:#d6dcf2;margin-bottom:8px}
+.ask textarea{width:100%;min-height:76px;resize:vertical;border:0;border-radius:12px;padding:12px;background:#fff;color:#1d1e2a;font-size:16px}
+.ask .row{display:flex;justify-content:flex-end;margin-top:8px}
+.btn{min-height:44px;padding:0 18px;border:0;border-radius:12px;background:var(--coral);color:#2a1a14;font-weight:800}
+.btn.ghost{background:transparent;border:1px solid var(--line);color:var(--ink)}
+.btn:disabled{opacity:.5}
+.picks{display:grid;gap:8px;margin-top:10px}
+.pick{display:block;width:100%;text-align:left;border:0;border-radius:12px;padding:12px 14px;background:#fff;color:#1d1e2a}
+.pick small{display:block;color:#5e6077;margin-top:2px}
+.picks p{margin:6px 2px;color:#d6dcf2;font-size:14px}
+
+main{max-width:760px;margin:0 auto;padding:18px max(4vw,14px) 60px}
+.tabs{display:flex;gap:8px;margin:4px 0 14px}
+.tab{min-height:40px;padding:0 16px;border-radius:999px;border:1px solid var(--line);background:var(--card)}
+.tab[aria-pressed=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+h2{font-size:14px;color:var(--mute);margin:22px 2px 8px}
+.qcard{display:block;width:100%;text-align:left;border:1px solid var(--line);background:var(--card);border-radius:16px;padding:14px 16px;margin-bottom:8px}
+.qcard .sit{display:block;font-weight:800;font-size:18px;line-height:1.4}
+.qcard .q{display:block;color:var(--mute);font-size:15px;margin-top:4px}
+.qcard .who{display:inline-block;margin-top:8px;font-size:12px;padding:2px 10px;border-radius:999px;background:light-dark(#eef2f8,#232842);color:light-dark(#26305a,#c9d3f5)}
+.qcard .dev{margin-left:6px;background:#ffe3d8;color:#7a2e14}
+.soon{margin-top:4px;padding:14px 16px;border-radius:16px;border:1px dashed var(--line);color:var(--mute);font-size:14px}
+.soon b{display:block;color:var(--ink);margin-bottom:2px}
+.upd{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:40;min-height:44px;padding:0 18px;border:0;border-radius:999px;background:var(--ink);color:var(--bg);font-weight:800;font-size:14px;box-shadow:0 8px 24px #0004;white-space:nowrap}
+.safe{margin-top:26px;padding:16px;border-radius:16px;background:light-dark(#eef2f8,#1d2238);border:1px solid var(--line)}
+.safe p{margin:4px 0 0;color:var(--mute);font-size:14px}
+.foot{color:var(--mute);font-size:13px;margin-top:20px}
+.links{display:flex;gap:14px;flex-wrap:wrap}
+.links button{border:0;background:none;padding:6px 0;color:var(--mute);text-decoration:underline;font-size:13px;min-height:36px}
+
+/* sheets */
+.scrim{position:fixed;inset:0;z-index:20;background:#0b0e1a99;display:flex;align-items:flex-end;justify-content:center}
+.sheet{width:100%;max-width:560px;max-height:92vh;overflow:auto;background:var(--bg);border-radius:22px 22px 0 0;padding:20px 18px calc(24px + env(safe-area-inset-bottom))}
+.x{position:sticky;top:-6px;float:right;z-index:2;width:44px;height:44px;margin:-8px -8px 0 8px;border:0;border-radius:50%;background:var(--card);box-shadow:0 2px 8px #0002;font-size:18px;color:var(--ink)}
+.sheet h3{margin:0;font-weight:800;font-size:22px;line-height:1.3;text-wrap:balance}
+.sheet .sq{margin:6px 0 2px;color:var(--mute)}
+.lbl{font-size:13px;font-weight:800;color:var(--mute);margin:18px 0 8px}
+.seg{display:grid;grid-template-columns:repeat(auto-fit,minmax(0,1fr));gap:6px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:4px}
+.seg button{min-height:42px;border:0;border-radius:10px;background:transparent;font-size:14px;padding:0 6px}
+.seg button[aria-pressed=true]{background:var(--dusk);color:#fff;font-weight:800}
+.seg button.off{opacity:.45}
+.lnk{border:0;background:none;padding:0;color:var(--coral);font-weight:800;text-decoration:underline;font-size:14px}
+.desc{font-size:14px;color:var(--mute);margin:8px 2px 0}
+.two{display:grid;grid-template-columns:minmax(0,1fr) 110px;gap:8px}
+.inp{width:100%;min-height:44px;border:1px solid var(--line);border-radius:12px;padding:8px 12px;background:var(--card);font-size:16px}
+.photo{display:flex;gap:14px;align-items:center}
+.face{width:96px;height:96px;border-radius:50%;flex:none;background:var(--card);border:1px solid var(--line);overflow:hidden;display:grid;place-items:center;font-weight:800;font-size:22px;color:var(--mute)}
+.face img{width:100%;height:100%;object-fit:cover}
+.photo .ctl{display:grid;gap:6px}
+.file{display:inline-flex;align-items:center;min-height:44px;padding:0 14px;border-radius:12px;border:1px solid var(--line);background:var(--card);font-size:15px;cursor:pointer;position:relative}
+.file input{position:absolute;opacity:0;width:1px;height:1px}
+.chk{display:flex;gap:8px;align-items:center;font-size:15px}
+.chk input{width:20px;height:20px;accent-color:var(--coral)}
+.future{margin-top:6px;padding:12px;border-radius:14px;border:1px solid var(--line);background:var(--card)}
+.future .q2{font-size:13px;font-weight:800;margin:10px 0 6px}
+.future .q2:first-child{margin-top:0}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips button{min-height:38px;padding:0 12px;border-radius:999px;border:1px solid var(--line);background:var(--bg);font-size:14px}
+.chips button[aria-pressed=true]{background:var(--coral);border-color:var(--coral);color:#2a1a14;font-weight:800}
+.go{width:100%;margin-top:20px;min-height:52px;font-size:17px}
+.cost{margin-top:14px;padding:12px 14px;border-radius:14px;background:light-dark(#fff4ef,#2a1f1c);border:1px solid light-dark(#ffd5c6,#4a3029)}
+.cost ul,.hl{margin:6px 0 0;padding-left:18px;font-size:14px;line-height:1.6}
+.row2{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+.doc h4{margin:18px 0 4px;font-size:15px}
+.doc p,.doc li{font-size:14px}
+.doc ul{padding-left:18px}
+.exp{max-height:34vh;overflow:auto;white-space:pre-wrap;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;font:13px/1.6 var(--f);margin:12px 0 0}
+
+/* conversation */
+.conv{position:fixed;inset:0;z-index:10;display:flex;flex-direction:column;background:var(--chat)}
+.chead{display:flex;align-items:center;gap:8px;padding:8px 8px;background:var(--dusk);color:#fff}
+.ib{min-width:40px;min-height:44px;border:0;background:transparent;color:#fff;font-size:24px;border-radius:10px}
+.av{width:38px;height:38px;border-radius:50%;flex:none;overflow:hidden;background:var(--sky);color:var(--dusk);display:grid;place-items:center;font-weight:800;font-size:15px}
+.av img{width:100%;height:100%;object-fit:cover}
+.who2{flex:1;line-height:1.25;overflow:hidden}
+.who2 b{display:block;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.who2 small{color:#c9d1ee;font-size:12px}
+.vbtn{min-height:36px;padding:0 10px;border:1px solid #ffffff40;border-radius:999px;background:#ffffff14;color:#fff;font-size:12px;white-space:nowrap}
+.pin{margin:10px 12px 0;padding:10px 14px;border-radius:14px;background:var(--card);border:1px solid var(--line);font-weight:800;font-size:15px;line-height:1.45}
+.pin small{display:block;font-weight:400;font-size:12px;color:var(--mute);margin-bottom:2px}
+.log{flex:1;overflow-y:auto;padding:14px 12px 8px;display:flex;flex-direction:column;gap:6px}
+.m{display:flex;gap:8px;align-items:flex-end;max-width:86%}
+.m .b{padding:9px 13px;border-radius:16px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:16px;line-height:1.55}
+.m.them{align-self:flex-start}
+.m.them .b{background:var(--card);border-top-left-radius:4px}
+.m.them .col{display:grid;gap:3px}
+.m.them .nm{font-size:12px;color:var(--mute)}
+.m.me{align-self:flex-end}
+.m.me .b{background:var(--mine);color:var(--mineink);border-top-right-radius:4px}
+.sys{align-self:center;max-width:92%;text-align:center;font-size:13px;color:var(--mute);background:light-dark(#ffffffa0,#ffffff10);padding:6px 14px;border-radius:14px;white-space:pre-wrap;margin:6px 0}
+.gcard{align-self:stretch;margin:8px 4px 2px;padding:12px 14px;border-radius:14px;background:light-dark(#fffaf3,#211f2b);border:1px solid light-dark(#f0dcc4,#3a3346);box-shadow:0 2px 0 light-dark(#f0dcc4,#3a3346)}
+.gcard small{display:block;font-size:12px;font-weight:800;color:var(--coral);margin-bottom:4px}
+.gcard.sum{background:light-dark(#eef2f8,#1d2238);border-color:var(--line);box-shadow:none}
+.gcard.sum small{color:var(--dusk)}
+.gcard.sum p{font-weight:400;font-size:15px}
+.gcard p{margin:0;white-space:pre-wrap;font-weight:700;font-size:16px;line-height:1.55}
+.altq{margin-top:8px;min-height:34px;padding:0 12px;border-radius:999px;border:1px dashed var(--line);background:transparent;color:var(--mute);font-size:13px}
+.sys.stage{font-style:italic;background:transparent}
+.dots{display:inline-flex;gap:4px;padding:4px 2px}
+.dots i{width:7px;height:7px;border-radius:50%;background:var(--mute);animation:bl 1.2s infinite}
+.dots i:nth-child(2){animation-delay:.2s}.dots i:nth-child(3){animation-delay:.4s}
+@keyframes bl{0%,80%,100%{opacity:.25;transform:translateY(0)}40%{opacity:1;transform:translateY(-3px)}}
+.bar{padding:8px 10px calc(8px + env(safe-area-inset-bottom));background:var(--card);border-top:1px solid var(--line)}
+.whorow{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.whorow>span{font-size:12px;font-weight:800;color:var(--mute);white-space:nowrap}
+.sw2{flex:1;border-color:var(--line);background:var(--bg);max-width:360px}
+.sw2 button{color:var(--mute)}
+.sw2 .knob{background:var(--mine)}
+.sw2[data-v=b] .knob{background:var(--sky)}
+.sw2.pulse .knob{animation:pl 1.4s 3}
+@keyframes pl{50%{box-shadow:0 0 0 6px #ff7a5944}}
+.hint{font-size:12px;color:var(--mute);margin:0 2px 6px}
+.desc code,.hint code{background:light-dark(#eef0f5,#262a3c);padding:1px 6px;border-radius:6px;font-family:inherit}
+.qr{display:flex;gap:6px;overflow-x:auto;padding:2px 0 8px;scrollbar-width:none}
+.qr button.fill{border-style:dashed;color:var(--mute)}
+.qr button{flex:none;min-height:38px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:var(--bg);font-size:14px;white-space:nowrap}
+.spkt{flex:none;width:56px;height:44px;border:0;background:none;padding:0;display:grid;place-items:center}
+.spkt .trk{position:relative;width:52px;height:32px;border-radius:999px;background:var(--mine);transition:background .3s}
+.spkt[aria-pressed=true] .trk{background:var(--sky)}
+.spkt i{position:absolute;top:3px;left:3px;width:26px;height:26px;border-radius:50%;background:#fff;font-style:normal;font-size:12px;font-weight:800;display:grid;place-items:center;color:#1d1e2a;transition:transform .3s cubic-bezier(.3,1.4,.5,1);box-shadow:0 1px 3px #0003}
+.spkt[aria-pressed=true] i{transform:translateX(20px)}
+.spkt.pulse .trk{animation:pl 1.4s 3}
+.inrow{display:flex;gap:8px;align-items:flex-end}
+#inp{flex:1;min-height:44px;max-height:120px;resize:none;border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--bg);font-size:16px}
+#inp.them{border-color:var(--sky);box-shadow:inset 0 0 0 1px var(--sky)}
+.send{flex:none;min-width:60px}
+
+/* game view */
+.game{flex:1;position:relative;overflow:hidden;--g1:#2b2f5c;--g2:#6a4552;--glow:#ffb37a;background:linear-gradient(180deg,var(--g1) 0%,var(--g2) 70%)}
+.game[data-scene=morning]{--g1:#8fb6dd;--g2:#e9cdb0;--glow:#fff0c4}
+.game[data-scene=night]{--g1:#0b0f2a;--g2:#1d2450;--glow:#a9c8ea}
+.gwin{position:absolute;top:5%;left:50%;transform:translateX(-50%);width:min(70%,360px);aspect-ratio:4/5;border-radius:50% 50% 10px 10px/32% 32% 10px 10px;background:linear-gradient(180deg,#ffffff22,#ffffff08);border:6px solid #0006;box-shadow:inset 0 0 40px #0005;overflow:hidden}
+.gwin::before,.gwin::after{content:"";position:absolute;background:#0005}
+.gwin::before{left:50%;top:0;bottom:0;width:5px;transform:translateX(-50%)}
+.gwin::after{top:46%;left:0;right:0;height:5px}
+.gorb{position:absolute;top:16%;right:18%;width:22%;aspect-ratio:1;border-radius:50%;background:var(--glow);box-shadow:0 0 40px 10px var(--glow);opacity:.85}
+.glamp{position:absolute;inset:0;background:radial-gradient(60% 40% at 50% 62%,color-mix(in srgb,var(--glow) 38%,transparent),transparent 70%);pointer-events:none}
+.gfloor{position:absolute;left:0;right:0;bottom:0;height:36%;background:linear-gradient(180deg,#0000 0,#0007 18%,#000a);border-top:1px solid #ffffff14}
+.gdust i{position:absolute;bottom:30%;width:4px;height:4px;border-radius:50%;background:var(--glow);opacity:0;animation:dust 9s linear infinite}
+.gdust i:nth-child(1){left:12%;animation-delay:0s}.gdust i:nth-child(2){left:24%;animation-delay:2.1s}.gdust i:nth-child(3){left:36%;animation-delay:4.4s}.gdust i:nth-child(4){left:48%;animation-delay:1.2s}.gdust i:nth-child(5){left:60%;animation-delay:3.3s}.gdust i:nth-child(6){left:72%;animation-delay:5.6s}.gdust i:nth-child(7){left:84%;animation-delay:.7s}.gdust i:nth-child(8){left:30%;animation-delay:6.5s}.gdust i:nth-child(9){left:66%;animation-delay:7.4s}.gdust i:nth-child(10){left:90%;animation-delay:2.8s}
+@keyframes dust{0%{transform:translate(0,0);opacity:0}15%{opacity:.7}100%{transform:translate(18px,-46vh);opacity:0}}
+.gchar{position:absolute;left:50%;bottom:calc(168px + 2vh);width:min(64vw,290px);aspect-ratio:3/4;transform:translateX(-50%);transition:filter .5s;animation:breathe 5.5s ease-in-out infinite}
+@keyframes breathe{50%{transform:translateX(-50%) scale(1.015) translateY(-3px)}}
+.gchar.dim{filter:brightness(.5) saturate(.5) blur(.5px)}
+.gframe{position:absolute;inset:0;border-radius:48% 48% 16px 16px/34% 34% 16px 16px;overflow:hidden;border:3px solid #f4e6d3dd;background:#3a4272;box-shadow:0 30px 60px #000a,0 0 90px color-mix(in srgb,var(--glow) 45%,transparent)}
+.gframe::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 60%,#0008)}
+.gframe img{width:100%;height:100%;object-fit:cover;object-position:50% 30%}
+.gframe svg{width:100%;height:100%}
+.gtitle{position:absolute;left:0;right:0;top:38%;text-align:center;color:#fff;opacity:0;transition:opacity 1s;pointer-events:none;text-shadow:0 2px 16px #000}
+.gtitle.on{opacity:1}
+.gtitle b{display:block;font-size:clamp(26px,7vw,38px);font-weight:800}
+.gtitle small{display:block;font-size:14px;color:#f4e6d3;margin-bottom:6px}
+.vn{position:absolute;left:10px;right:10px;bottom:10px;min-height:150px;background:linear-gradient(180deg,#151b3af2,#0c1024f7);border:1px solid #f4e6d377;border-radius:14px;padding:26px 18px 22px;color:#f7f1e8;cursor:pointer;box-shadow:0 -10px 40px #0007,inset 0 0 0 4px #0c1024,inset 0 0 0 5px #f4e6d322}
+.plate{position:absolute;top:-16px;left:14px;max-width:80%;padding:5px 16px;border-radius:8px 8px 8px 0;background:var(--coral);color:#1d1e2a;font-weight:800;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;box-shadow:0 4px 12px #0006}
+.plate.me{background:var(--mine)}.plate.sys{background:#f4e6d3}
+.vt{font-size:18px;line-height:1.7;white-space:pre-wrap;overflow-wrap:anywhere;max-height:28vh;overflow-y:auto}
+.vt.stage{font-style:italic;color:#d9d2c6}
+.nxt{position:absolute;right:16px;bottom:8px;font-size:12px;color:#f4e6d3;animation:nx 1s steps(2) infinite}
+@keyframes nx{50%{opacity:0}}
+.logbtn{position:absolute;top:10px;right:10px;z-index:2;min-height:36px;padding:0 12px;border-radius:999px;border:1px solid #ffffff40;background:#00000050;color:#fff;font-size:13px}
+.glog{position:absolute;inset:0;z-index:3;background:#0b0e1af2;color:#fff;overflow:auto;padding:56px 18px 18px}
+.glog p{margin:0 0 12px;white-space:pre-wrap}
+.glog b{color:var(--coral);margin-right:6px}
+@media(prefers-reduced-motion:reduce){.gchar,.gdust i,.nxt{animation:none}}
+
+/* time travel */
+.warp{position:fixed;inset:0;z-index:30;color:#fff;display:grid;place-items:center;text-align:center;padding:24px;overflow:hidden;background:#0d1024;transition:background 1.2s}
+.warp .rings{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none}
+.warp .rings i{position:absolute;width:40vmin;height:40vmin;border-radius:50%;border:1px solid #a9c8ea44;animation:rip 3.6s linear infinite}
+.warp .rings i:nth-child(2){animation-delay:1.2s}.warp .rings i:nth-child(3){animation-delay:2.4s}
+@keyframes rip{from{transform:scale(.2);opacity:1}to{transform:scale(3);opacity:0}}
+.stage{position:relative;display:grid;justify-items:center;gap:10px;width:min(92vw,480px)}
+.wface{width:min(46vw,200px);aspect-ratio:1;border-radius:50%;overflow:hidden;border:3px solid #f4e6d3cc;box-shadow:0 0 0 0 #f4e6d300;transition:opacity 1s,box-shadow 1.2s,transform 1.2s}
+.wface img{width:100%;height:100%;object-fit:cover;display:block}
+.wface.glow{box-shadow:0 0 60px 18px #f4e6d366;transform:scale(1.06)}
+.wn{font-weight:800;font-size:clamp(54px,16vw,104px);line-height:1;color:var(--coral);font-variant-numeric:tabular-nums}
+.wn small{font-size:.32em;color:#fff;margin-left:4px}
+.wl{font-weight:700;font-size:clamp(19px,4.6vw,26px);line-height:1.5;white-space:pre-line;transition:opacity .7s;text-wrap:balance;min-height:1.5em}
+.ev{position:relative;display:inline-block;padding:8px 16px;border-radius:12px;background:#ffffff14;border:1px solid #ffffff2e;font-size:15px;transition:opacity .4s,transform .4s;min-height:40px}
+.ev.off{opacity:0;transform:translateY(8px)}
+.fog{position:absolute;inset:-20%;pointer-events:none;opacity:0;transition:opacity 2.2s;background:radial-gradient(40% 30% at 30% 60%,#ffffff22,transparent 70%),radial-gradient(45% 35% at 70% 40%,#ffffff1c,transparent 70%),radial-gradient(60% 40% at 50% 80%,#e8eefc22,transparent 70%);animation:drift 14s linear infinite}
+.fog.on{opacity:1}
+@keyframes drift{from{transform:translateX(-4%)}to{transform:translateX(4%)}}
+.ghost{position:absolute;left:50%;top:50%;width:min(50vw,220px);aspect-ratio:3/4;transform:translate(-50%,-56%);opacity:0;transition:opacity 2s;pointer-events:none;filter:blur(2px)}
+.ghost.on{opacity:.55}
+.skip{position:absolute;bottom:calc(20px + env(safe-area-inset-bottom));right:20px;min-height:40px;padding:0 14px;border-radius:999px;border:1px solid #ffffff40;background:transparent;color:#fff;font-size:13px;z-index:2}
+@media(prefers-reduced-motion:reduce){.warp .rings i,.dots i,.fog,.sw2.pulse .knob{animation:none}.wl,.ev,.sw .knob{transition:none}}
+@media(min-width:700px){.scrim{align-items:center}.sheet{border-radius:22px}}
+@media(max-width:420px){.swlab{display:none}.brand{font-size:15px}.tbtn{padding:0 10px}.sw button{padding:0 9px}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="brand">나에게 묻는 질문</div>
+  <span class="swlab">질문 표현</span>
+  <div class="sw" id="modeSw" role="group" aria-label="질문 표현 방식"><span class="knob"></span><button data-m="a">추상</button><button data-m="s">구체</button></div>
+  <button class="tbtn" id="setBtn">설정</button>
+</header>
+
+<div id="home">
+  <section class="hero">
+    <h1>지금, 어떤 순간인가요?</h1>
+    <p>상황을 고르면 그 순간에 맞는 질문과 대화 상대가 기다리고 있어요.</p>
+    <button class="aihint" id="aiHint">AI를 연결하면 고민에 맞는 질문을 추천받고, 상대가 직접 대답해줘요 ›</button>
+    <div class="ask hide" id="askBox">
+      <label for="worry">고민을 적으면 어울리는 질문을 골라드려요</label>
+      <textarea id="worry" placeholder="예: 이직 제안을 받았는데 지금 팀을 떠나는 게 맞는지 모르겠어"></textarea>
+      <div class="row"><button class="btn" id="askBtn">질문 추천받기</button></div>
+      <div class="picks" id="picks"></div>
+    </div>
+  </section>
+  <main>
+    <div id="list"></div>
+    <div class="safe">
+      <b>당신의 대화는 오직 이 기기에만 있어요.</b>
+      <p>대화 내용, 사진, 이름, 나이는 서버에 저장하지 않고 읽지도 않아요. 앱을 더 좋게 만들기 위해 '몇 번 대화했는지' 같은 숫자만 이름 없이 모아요.</p>
+    </div>
+    <p class="foot">사진은 이 기기 안에서만 쓰이고 어디로도 보내지 않아요.<br>
+    이 앱은 상담이나 치료를 대신하지 않아요. 마음이 많이 힘들 때는 자살예방상담전화 <b>109</b>로 언제든 연락하세요.</p>
+    <p class="links"><button id="privBtn">개인정보 처리방침</button><button id="termsBtn">이용 안내</button></p>
+  </main>
+</div>
+
+<button class="upd hide" id="upd">새 버전이 나왔어요 · 눌러서 새로고침</button>
+<!-- setup -->
+<div class="scrim hide" id="scrim">
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sTitle">
+    <button class="x" aria-label="닫기">✕</button>
+    <h3 id="sTitle"></h3>
+    <p class="sq" id="sQ"></p>
+
+    <div class="lbl">나</div>
+    <div class="two">
+      <input class="inp" id="nameInp" maxlength="12" placeholder="이름 (예: 헴)" autocomplete="nickname" aria-label="내 이름">
+      <input class="inp" id="ageInp" type="number" inputmode="numeric" min="14" max="99" placeholder="나이" aria-label="현재 나이">
+    </div>
+    <p class="desc" id="ageNeed"></p>
+
+    <div id="futBox" class="hide">
+      <div class="lbl" id="futLbl">미래의 나는…</div>
+      <div class="future" id="future"></div>
+      <p class="desc">고르면 시간 여행 장면과 대화에 반영돼요. 모르겠으면 그냥 두세요.</p>
+    </div>
+
+    <div class="lbl">대화 상대</div>
+    <div class="photo">
+      <div class="face" id="sFace"></div>
+      <div class="ctl">
+        <b id="sWho"></b>
+        <label class="file">사진 고르기·촬영<input type="file" id="pFile" accept="image/*" capture="user"></label>
+        <label class="file hide" id="oldRow">나이 든 내 사진 넣기<input type="file" id="pOld" accept="image/*"></label>
+        <label class="chk hide" id="ageRow"><input type="checkbox" id="ageChk"> 세월 효과 (사진이 오래된 기억처럼 바래요)</label>
+        <span class="desc" id="faceMsg" style="margin:0"></span>
+        <span class="desc hide" id="oldHelp" style="margin:0">노화 필터 앱(예: FaceApp)으로 만든 사진을 넣으면, 시간 여행 끝에 그 얼굴로 나타나요.</span>
+      </div>
+    </div>
+
+    <div class="lbl">연출</div>
+    <div class="seg" id="segImm">
+      <button data-v="1" aria-pressed="true">몰입 모드</button>
+      <button data-v="0" aria-pressed="false">바로 대화</button>
+    </div>
+    <div class="lbl">화면</div>
+    <div class="seg" id="segView">
+      <button data-v="chat" aria-pressed="true">채팅방</button>
+      <button data-v="game" aria-pressed="false">게임 대화창</button>
+    </div>
+    <div class="lbl">대화 방식</div>
+    <div class="seg" id="segTalk">
+      <button data-v="self" aria-pressed="true">직접 쓰기</button>
+      <button data-v="guide" aria-pressed="false">안내 받기</button>
+      <button data-v="ai" aria-pressed="false" id="aiOpt">AI가 대답</button>
+    </div>
+    <p class="desc" id="talkDesc"></p>
+    <button class="btn go" id="goBtn">만나러 가기</button>
+    <button class="btn ghost go" id="closeBtn" style="margin-top:8px">닫기</button>
+  </div>
+</div>
+
+<!-- settings -->
+<div class="scrim hide" id="setScrim">
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="setTitle">
+    <button class="x" aria-label="닫기">✕</button>
+    <h3 id="setTitle">AI 연결 (선택)</h3>
+    <p class="sq">연결하지 않아도 '직접 쓰기'와 '안내 받기'로 모든 대화를 할 수 있어요.</p>
+    <div id="appAi" class="cost hide"><b>지금은 Claude 앱 안에서 열려 있어요.</b><p class="desc" style="margin:4px 0 0">내 Claude 계정으로 AI 기능이 바로 작동해요. 별도 연결이 필요 없어요.</p></div>
+    <div id="keyAi">
+      <div class="cost">
+        <b>비용 안내</b>
+        <ul>
+          <li>이 앱은 무료예요. 우리는 어떤 요금도 받지 않아요.</li>
+          <li>AI 기능은 <b>본인의 API 키</b>로 작동하고, 사용한 만큼 <b>API 요금이 본인 계정에 청구</b>돼요.</li>
+          <li>ChatGPT Plus나 Claude Pro 같은 <b>구독과는 별개</b>예요. 구독 중이어도 API 요금은 따로 나가요.</li>
+          <li>정확한 요금은 각 회사의 API 요금표를 확인하세요.</li>
+        </ul>
+      </div>
+      <div class="lbl">어떤 AI를 연결할까요?</div>
+      <div class="seg" id="segProv">
+        <button data-v="" aria-pressed="true">연결 안 함</button>
+        <button data-v="claude" aria-pressed="false">Claude</button>
+        <button data-v="openai" aria-pressed="false">ChatGPT</button>
+      </div>
+      <div id="provBox" class="hide">
+        <div class="lbl"><label for="keyInp">API 키</label></div>
+        <input class="inp" id="keyInp" type="password" autocomplete="off" spellcheck="false">
+        <p class="desc" id="keyHelp"></p>
+        <div class="lbl"><label for="modelInp">모델 이름</label></div>
+        <input class="inp" id="modelInp" autocomplete="off" spellcheck="false">
+        <p class="desc">모델 이름은 자주 바뀌어요. 오류가 나면 각 회사 문서에서 최신 이름을 확인해 바꿔주세요.</p>
+        <label class="chk" style="margin-top:14px"><input type="checkbox" id="keyKeep"> 이 기기에 키 기억하기</label>
+        <p class="desc">API 키는 이 기기의 브라우저에만 보관되고, 우리 서버로는 절대 전송되지 않아요. 체크하지 않으면 창을 닫을 때 지워져요. 공용 기기에서는 체크하지 마세요.</p>
+        <p class="desc">AI 모드에서는 대화 내용이 연결한 회사(Anthropic 또는 OpenAI)로 이 기기에서 <b>직접</b> 전송돼요. 우리를 거치지 않아요.</p>
+        <div class="row2"><button class="btn" id="testBtn">연결 확인</button><button class="btn ghost" id="delKey">키 지우기</button></div>
+        <p class="desc" id="testMsg" aria-live="polite"></p>
+      </div>
+    </div>
+    <div class="lbl">개인정보</div>
+    <label class="chk"><input type="checkbox" id="statsChk"> 익명 사용 통계에 참여하기</label>
+    <div class="row2"><button class="btn ghost" id="wipeBtn">이 기기에 저장된 내 정보 모두 지우기</button></div>
+    <p class="desc" id="wipeMsg" aria-live="polite"></p>
+    <button class="btn go" id="setDone">완료</button>
+  </div>
+</div>
+
+<!-- doc -->
+<div class="scrim hide" id="docScrim">
+  <div class="sheet doc" role="dialog" aria-modal="true" aria-labelledby="docTitle">
+    <button class="x" aria-label="닫기">✕</button>
+    <h3 id="docTitle"></h3>
+    <div id="docBody"></div>
+    <button class="btn go" id="docClose">닫기</button>
+  </div>
+</div>
+
+<!-- export -->
+<div class="scrim hide" id="expScrim">
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="expTitle">
+    <button class="x" aria-label="닫기">✕</button>
+    <h3 id="expTitle">대화 내보내기</h3>
+    <p class="sq">카톡 대화 내보내기처럼 텍스트로 저장돼요. 파일은 이 기기에만 만들어져요.</p>
+    <pre class="exp" id="expPre"></pre>
+    <div class="row2"><button class="btn" id="expSave">파일로 저장</button><button class="btn ghost" id="expCopy">복사하기</button></div>
+    <p class="desc" id="expMsg" aria-live="polite"></p>
+    <button class="btn ghost go" id="expClose">닫기</button>
+  </div>
+</div>
+
+<!-- first visit -->
+<div class="scrim hide" id="hello">
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="helloT">
+    <h3 id="helloT">당신의 대화는 오직 이 기기에만 있어요</h3>
+    <ul class="hl">
+      <li>가입도, 로그인도 필요 없어요.</li>
+      <li>대화 내용, 사진, 이름, 나이는 서버에 저장하지 않고 읽지도 않아요.</li>
+      <li>앱을 더 좋게 만들기 위해 '몇 번 대화했는지' 같은 숫자만 이름 없이 모아요.</li>
+      <li>AI를 연결하면, 그 대화는 당신이 연결한 AI 회사로만 전달돼요.</li>
+      <li>이 앱은 상담이나 치료를 대신하지 않아요. 힘들 때는 109로 연락하세요.</li>
+    </ul>
+    <p class="desc">만 14세 이상만 이용할 수 있어요. 시작하면 이 내용과 이름 없는 사용 통계 수집에 동의하는 것으로 봐요.</p>
+    <button class="btn go" id="helloOk">시작하기</button>
+    <button class="btn ghost go" id="helloPriv" style="margin-top:8px">개인정보 처리방침 보기</button>
+  </div>
+</div>
+
+<!-- conversation -->
+<div class="conv hide" id="conv">
+  <div class="chead">
+    <button class="ib" id="backBtn" aria-label="뒤로">‹</button>
+    <div class="av" id="cAv"></div>
+    <div class="who2"><b id="cName"></b><small id="cSub"></small></div>
+    <button class="vbtn" id="vSwitch"></button>
+    <button class="vbtn" id="expBtn">내보내기</button>
+  </div>
+  <div class="pin" id="pin"></div>
+  <div class="log" id="log" aria-live="polite"></div>
+  <div class="game hide" id="game" data-scene="dusk">
+    <div class="gwin"><span class="gorb"></span></div>
+    <div class="glamp"></div>
+    <div class="gfloor"></div>
+    <div class="gdust" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    <div class="gchar" id="portrait"><div class="gframe" id="pRing"></div></div>
+    <div class="gtitle" id="gtitle"></div>
+    <button class="logbtn" id="logBtn">대화 기록</button>
+    <div class="vn" id="vn"><span class="plate" id="plate"></span><div class="vt" id="vt"></div><span class="nxt" aria-hidden="true">▼</span></div>
+    <div class="glog hide" id="glog"></div>
+  </div>
+  <div class="bar">
+    <div class="qr hide" id="qr"></div>
+    <p class="hint" id="hint"></p>
+    <div class="inrow">
+      <button class="spkt" id="spkT" aria-label="보내는 사람 바꾸기" aria-pressed="false"><span class="trk"><i id="spkI"></i></span></button>
+      <textarea id="inp" rows="1" placeholder="메시지 입력"></textarea>
+      <button class="btn send" id="sendBtn">보내기</button>
+    </div>
+  </div>
+</div>
+
+<!-- time travel -->
+<div class="warp hide" id="warp">
+  <div class="rings"><i></i><i></i><i></i></div>
+  <div class="fog" id="fog"></div>
+  <svg class="ghost" id="ghost" viewBox="0 0 120 160" aria-hidden="true"><defs><radialGradient id="gg" cx=".5" cy=".4" r=".6"><stop offset="0" stop-color="#f4e6d3" stop-opacity=".9"/><stop offset="1" stop-color="#f4e6d3" stop-opacity="0"/></radialGradient></defs><circle cx="60" cy="48" r="24" fill="url(#gg)"/><path d="M14 160c4-48 22-74 46-74s42 26 46 74z" fill="url(#gg)"/></svg>
+  <div class="stage">
+    <div class="wface hide" id="wface"><img id="wimg" alt=""></div>
+    <div class="wn hide" id="wn"></div>
+    <div class="ev off" id="wev"></div>
+    <div class="wl" id="wl"></div>
+  </div>
+  <button class="skip" id="skip">건너뛰기</button>
+</div>
+
+<script>
+{
+/* ── 운영 설정: 배포할 때 여기만 채우면 돼요 ── */
+const CONFIG={
+  analyticsSrc:'',      // 예: 'https://cloud.umami.is/script.js'
+  analyticsId:'',       // Umami 웹사이트 ID
+  contact:'',           // 개인정보 문의 이메일
+  version:'2026.11.22-2'         // 수정해서 올릴 때마다 version.json과 같이 올려주세요
+};
+
+const C={time:'시간 축을 옮기는 질문',view:'관점을 바꾸는 질문',core:'본질을 찾는 질문',risk:'리스크를 따지는 질문',calm:'감정을 가라앉히는 질문'};
+/* t: age=나이 기준 미래, rel=상대 시간 */
+const Q=[
+{id:'wise',c:'time',core:1,a:'현명한 판단이 필요할 때',s:'인생의 큰 갈림길에 섰을 때',q:'85살의 나는 지금의 나에게 뭐라고 할까?',p:'85살의 나',T:{t:'age',to:85},fut:1,aging:1,arr:'어디선가 낯익은 목소리가 들린다…'},
+{id:'brave',c:'time',core:1,a:'용기가 필요할 때',s:'도전할지 말지 망설여질 때',q:'5년 뒤의 나는 안 해서 후회할까, 해서 후회할까?',p:'5년 뒤의 나',T:{t:'age',plus:5},fut:1,aging:1,arr:'문이 열리고, 조금 달라진 내가 들어온다…'},
+{id:'past',c:'calm',a:'마음이 무거울 때',s:'지금 고민이 세상의 전부처럼 느껴질 때',q:'6개월 전 세상의 전부 같던 그 고민은, 지금 어떻게 됐지?',p:'6개월 전의 나',T:{t:'rel',to:6,u:'개월 전',back:1},g:['어…? 너 혹시 6개월 뒤의 나야?','나 요즘 진짜 큰일 났어. 이것 때문에 잠도 못 자. 그거 어떻게 됐어? 잘 지나갔어?'],arr:'시간이 거꾸로 흐른다. 6개월 전, 밤새 뒤척이던 내가 있다…'}
+];
+const FUT=[
+ {k:'marry',q:'결혼은',o:[['done','이미 했어요'],['will','하게 돼요'],['no','하지 않아요']]},
+ {k:'kid',q:'아이는',o:[['has','이미 있어요'],['will','생겨요'],['no','없어요']]},
+ {k:'work',q:'일은',o:[['keep','오래오래 해요'],['retire','60쯤 은퇴해요'],['new','새로운 일을 시작해요']]}
+];
+const TALK={
+ self:'<b>AI 없이 무료.</b> 나와 상대의 말을 모두 내가 써요. 입력칸 왼쪽 <b>토글</b>을 누르거나, 메시지 맨 앞에 <code>-</code> <code>;</code> <code>\'</code> 중 하나를 붙이면 상대가 보낸 말이 돼요.',
+ guide:'<b>AI 없이 무료.</b> 준비된 질문 카드가 하나씩 나와요. 고르기만 해도 되는 쉬운 질문부터 시작해서, 감정 → 그 밑의 이유 → 진짜 바라는 것으로 천천히 들어가요. 마지막엔 내가 상대가 되어 직접 답해요. 마음에 안 드는 질문은 다른 질문으로 바꿀 수 있어요.',
+ ai:'<b>AI가 상대 역할을 맡아 직접 대답해요.</b>'};
+const AIDESC=()=>st.sample?' 지금은 Claude 앱 안이라 내 Claude 계정 사용량으로 작동해요. 따로 드는 비용은 없어요.':aiReady()?` 연결한 ${st.prov==='claude'?'Claude':'ChatGPT'} API 키로 작동하고, 사용한 만큼 <b>본인 API 계정에 요금이 청구</b>돼요. 구독(Plus, Pro)과는 별개예요.`:' 설정에서 <b>본인 API 키</b>를 연결해야 쓸 수 있어요. 요금은 본인 API 계정에 사용한 만큼 청구되고, 이 앱이 받는 돈은 없어요.';
+const PRE=/^\s*[-'‘’`;]\s*/;
+const DEF_MODEL={claude:'claude-sonnet-5-5',openai:'gpt-5.5'};
+
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+const ls={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{v==null?localStorage.removeItem(k):localStorage.setItem(k,v)}catch(e){}}};
+const ss={get(k){try{return sessionStorage.getItem(k)}catch(e){return null}},set(k,v){try{v==null?sessionStorage.removeItem(k):sessionStorage.setItem(k,v)}catch(e){}}};
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const J=(k,d)=>{try{return JSON.parse(ls.get(k))||d}catch(e){return d}};
+
+const st={
+ name:ls.get('name')||'',age:+ls.get('age')||0,fut:J('fut',{}),mode:ls.get('mode')||'a',tab:'core',
+ view:'chat',talk:'self',imm:true,q:null,raw:null,photos:{},lm:null,age_on:false,photo:null,stages:[],
+ msgs:[],speaker:'me',step:0,busy:false,sample:null,
+ prov:ls.get('prov')||'',key:ls.get('aikey')||ss.get('aikey')||'',model:ls.get('model')||'',keep:!!ls.get('aikey'),
+ stats:ls.get('stats')!=='0'
+};
+
+/* ── 익명 통계 ── */
+let anaLoaded=false;
+function loadAnalytics(){
+  if(anaLoaded||!st.stats||!CONFIG.analyticsSrc||!CONFIG.analyticsId)return;
+  anaLoaded=true;const s=document.createElement('script');s.defer=true;s.src=CONFIG.analyticsSrc;s.dataset.websiteId=CONFIG.analyticsId;s.dataset.doNotTrack='true';document.head.appendChild(s);
+}
+function track(name,data){try{if(st.stats&&window.umami&&umami.track)umami.track(name,data);}catch(e){}}
+
+/* ── 이름/페르소나 ── */
+const ME=()=>st.name||'나';
+const bat=w=>{const c=(w||'').trim().slice(-1).charCodeAt(0);if(c>=0xAC00&&c<=0xD7A3)return (c-0xAC00)%28!==0;return /[0-9]$/.test(w)?/[136780]$/.test(w):false;};
+const jo=(w,a,b)=>w+(bat(w)?a:b);
+const voc=n=>n+(bat(n)?'아':'야');
+const isSelf=q=>/나$/.test(q.p);
+const P=q=>st.name&&isSelf(q)?q.p.replace(/나$/,st.name):q.p;
+const ini=p=>p.replace(/[^가-힣A-Za-z0-9]/g,'').slice(-1)||'나';
+const sit=q=>st.mode==='a'?q.a:q.s;
+const targetAge=q=>q.T&&q.T.t==='age'&&st.age?(q.T.to||st.age+q.T.plus):0;
+const kor=n=>{const u=['','일','이','삼','사','오','육','칠','팔','구'];if(n<10)return u[n];const t=Math.floor(n/10),o=n%10;return (t>1?u[t]:'')+'십'+u[o];};
+const sal=n=>{const t=['','열','스물','서른','마흔','쉰','예순','일흔','여든','아흔'],o=['','한','두','세','네','다섯','여섯','일곱','여덟','아홉'];if(n<10||n>99)return n+'살';const a=Math.floor(n/10),b=n%10;return (n===20?'스무':t[a]+o[b])+' 살';};
+
+/* ── 표현 스위치 ── */
+function renderMode(){const sw=$('modeSw');sw.dataset.v=st.mode==='a'?'a':'b';sw.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.m===st.mode));}
+$('modeSw').onclick=e=>{const b=e.target.closest('button');st.mode=b?b.dataset.m:(st.mode==='a'?'s':'a');ls.set('mode',st.mode);renderMode();renderList();if(st.q&&!$('scrim').classList.contains('hide'))fillSheet();};
+
+const POOL=()=>Q;
+function renderList(){
+  $('list').innerHTML=Q.map(q=>`<button class="qcard" data-id="${q.id}"><span class="sit">${esc(sit(q))}</span><span class="q">${esc(q.q)}</span><span class="who">대화 상대 · ${esc(P(q))}</span></button>`).join('')+
+    `<div class="soon"><b>새로운 대화 상대가 하나씩 열려요</b><span>준비되는 대로 찾아올게요.</span></div>`;
+}
+$('list').onclick=e=>{const b=e.target.closest('.qcard');if(b)openSheet(Q.find(q=>q.id===b.dataset.id));};
+
+/* ── 설정 시트 ── */
+function seg(id,val){document.querySelectorAll(`#${id} button`).forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===String(val)));}
+function show(id){$(id).classList.remove('hide');}
+function hide(id){$(id).classList.add('hide');}
+function faceHTML(){const ph=st.q&&st.photos[st.q.id]||{};const src=ph.old||(st.age_on&&st.stages.length?st.stages[st.stages.length-1]:st.raw);return src?`<img src="${src}" alt="">`:esc(ini(P(st.q)));}
+function fillSheet(){
+  const q=st.q;$('sTitle').textContent=sit(q);$('sQ').textContent=q.q;$('sWho').textContent=P(q);
+  $('nameInp').value=st.name;$('ageInp').value=st.age||'';
+  const needAge=q.T&&q.T.t==='age';
+  $('ageNeed').textContent=needAge?ageLine(q):'';
+  $('futBox').classList.toggle('hide',!q.fut);
+  if(q.fut){$('futLbl').textContent=`${jo(P(q),'은','는')}…`;$('future').innerHTML=FUT.map(f=>`<div class="q2">${f.q}</div><div class="chips" data-k="${f.k}">${f.o.map(([v,t])=>`<button data-v="${v}" aria-pressed="${st.fut[f.k]===v}">${t}</button>`).join('')}</div>`).join('');}
+  $('sFace').innerHTML=faceHTML();
+  const ph=st.photos[q.id]||{};
+  $('oldRow').classList.toggle('hide',!q.aging);$('oldHelp').classList.toggle('hide',!q.aging);
+  $('ageRow').classList.toggle('hide',!q.aging||!st.raw||!!ph.old);$('ageChk').checked=st.age_on;
+  seg('segImm',st.imm?1:0);seg('segView',st.view);seg('segTalk',st.talk);
+  $('aiOpt').classList.toggle('off',!aiReady());
+  $('talkDesc').innerHTML=TALK[st.talk]+(st.talk==='ai'?AIDESC():'')+(st.talk!=='ai'&&!aiReady()?'<br><span>AI가 대답하는 방식은 설정에서 본인 API 키를 연결하면 열려요.</span>':'');
+}
+function openSheet(q){st.q=q;const ph=st.photos[q.id]||{};st.raw=ph.raw||null;st.stages=[];$('faceMsg').textContent='';$('pFile').value='';$('pOld').value='';st.age_on=!!q.aging&&!!st.raw;if(st.talk==='ai'&&!aiReady())st.talk='self';buildStages().then(()=>{if(st.q===q)$('sFace').innerHTML=faceHTML();});fillSheet();show('scrim');track('question_open',{id:q.id});}
+$('closeBtn').onclick=()=>hide('scrim');
+document.querySelectorAll('.scrim').forEach(s=>s.addEventListener('click',e=>{if(e.target===s&&s.id!=='hello')s.classList.add('hide');}));
+$('nameInp').addEventListener('input',e=>{st.name=e.target.value.trim();ls.set('name',st.name||null);$('sWho').textContent=P(st.q);renderList();});
+const ageLine=q=>st.age?`지금 ${st.age}살 → ${targetAge(q)}살. 그 사이의 시간이 흘러가요.`:'나이를 적으면 지금 나이부터 시간이 흘러가요.';
+$('ageInp').addEventListener('input',e=>{const v=parseInt(e.target.value,10);st.age=v>=14&&v<=99?v:0;ls.set('age',st.age||null);const q=st.q;if(q.T&&q.T.t==='age')$('ageNeed').textContent=ageLine(q);buildStages().then(()=>$('sFace').innerHTML=faceHTML());});
+$('future').onclick=e=>{const b=e.target.closest('button');if(!b)return;const k=b.parentNode.dataset.k;st.fut[k]=st.fut[k]===b.dataset.v?undefined:b.dataset.v;ls.set('fut',JSON.stringify(st.fut));b.parentNode.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',st.fut[k]===x.dataset.v));};
+$('segImm').onclick=e=>{const b=e.target.closest('button');if(b){st.imm=b.dataset.v==='1';seg('segImm',b.dataset.v);}};
+$('segView').onclick=e=>{const b=e.target.closest('button');if(b){st.view=b.dataset.v;seg('segView',st.view);}};
+$('segTalk').onclick=e=>{const b=e.target.closest('button');if(!b)return;
+  if(b.dataset.v==='ai'&&!aiReady()){$('talkDesc').innerHTML=TALK.ai+AIDESC()+' <button class="lnk" id="openSet">설정 열기</button>';$('openSet').onclick=openSettings;return;}
+  st.talk=b.dataset.v;fillSheet();};
+$('ageChk').onchange=e=>{st.age_on=e.target.checked;$('sFace').innerHTML=faceHTML();};
+
+/* ── 사진 + 얼굴 찾기 + 세월 필터 ── */
+$('pFile').onchange=e=>{
+  const f=e.target.files[0];if(!f)return;const u=URL.createObjectURL(f);const img=new Image();
+  img.onload=async()=>{
+    const S=480,c=document.createElement('canvas');c.width=c.height=S;const m=Math.min(img.width,img.height);
+    c.getContext('2d').drawImage(img,(img.width-m)/2,(img.height-m)/2,m,m,0,0,S,S);URL.revokeObjectURL(u);
+    const qid=st.q.id;st.raw=c.toDataURL('image/jpeg',.88);st.stages=[];st.photos[qid]=Object.assign(st.photos[qid]||{},{raw:st.raw});st.age_on=!!st.q.aging;fillSheet();
+    if(st.q.aging){await buildStages();$('sFace').innerHTML=faceHTML();}
+    track('photo_added');
+  };img.src=u;
+};
+function loadImg(src){return new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.src=src;});}
+function maxT(q){if(!q||!q.aging)return 0;const cur=st.age||35,to=targetAge(q)||(cur+(q.T.plus||50));return Math.max(.35,Math.min(1,(to-cur)/Math.max(10,85-cur)));}
+function cropSq(img,S){const c=document.createElement('canvas');c.width=c.height=S;const m=Math.min(img.width,img.height);c.getContext('2d').drawImage(img,(img.width-m)/2,(img.height-m)/2,m,m,0,0,S,S);return c;}
+$('pOld').onchange=e=>{const f=e.target.files[0];if(!f||!st.q)return;const u=URL.createObjectURL(f);const img=new Image();
+  img.onload=async()=>{const qid=st.q.id;st.photos[qid]=st.photos[qid]||{};st.photos[qid].old=cropSq(img,480).toDataURL('image/jpeg',.88);URL.revokeObjectURL(u);
+    await buildStages();fillSheet();$('faceMsg').textContent='나이 든 사진을 넣었어요. 시간 여행 끝에 이 얼굴로 나타나요.';track('photo_old');};img.src=u;};
+async function buildStages(){
+  st.stages=[];if(!st.q||!st.q.aging)return;const ph=st.photos[st.q.id]||{};
+  if(ph.old){const o=await loadImg(ph.old),r=st.raw?await loadImg(st.raw):null;
+    st.stages=[0,.25,.5,.75,1].map(k=>{const c=document.createElement('canvas');c.width=c.height=480;const x=c.getContext('2d');
+      if(r){x.drawImage(r,0,0,480,480);x.globalAlpha=k;}x.drawImage(o,0,0,480,480);return c.toDataURL('image/jpeg',.88);});
+    if(!r)st.stages=[ph.old];return;}
+  if(!st.raw)return;
+  const img=await loadImg(st.raw);const T=maxT(st.q);
+  st.stages=[0,.25,.5,.75,1].map(k=>memFace(img,T*k));
+}
+/* 세월 효과: 시간이 갈수록 사진이 오래된 기억처럼 바래고 흐려지며 빛에 잠겨요 */
+function rnd(seed){let s=seed;return()=>{s=(s*16807)%2147483647;return s/2147483647;};}
+function memFace(img,t){
+  const S=480,c=document.createElement('canvas');c.width=c.height=S;const x=c.getContext('2d');
+  const k=Math.max(.14,1-t*.8),sm=document.createElement('canvas');sm.width=sm.height=Math.max(8,Math.round(S*k));
+  const sx=sm.getContext('2d');sx.imageSmoothingQuality='high';sx.drawImage(img,0,0,sm.width,sm.height);
+  x.imageSmoothingQuality='high';x.drawImage(sm,0,0,S,S);
+  if(t<=0)return c.toDataURL('image/jpeg',.88);
+  const d=x.getImageData(0,0,S,S),a=d.data,R=rnd(11);
+  for(let i=0;i<a.length;i+=4){
+    let r=a[i],g=a[i+1],b=a[i+2];const l=.3*r+.59*g+.11*b;
+    const ds=.85*t;r+=(l-r)*ds;g+=(l-g)*ds;b+=(l-b)*ds;
+    const w=.55*t;r+=(l*1.08+14-r)*w;g+=(l*.98+6-g)*w;b+=(l*.8-b)*w;
+    const lift=42*t;r=lift+r*(1-lift/255);g=lift+g*(1-lift/255);b=lift*.9+b*(1-lift/255);
+    const n=(R()-.5)*22*t;a[i]=r+n;a[i+1]=g+n;a[i+2]=b+n;
+  }
+  x.putImageData(d,0,0);
+  const lg=x.createRadialGradient(S*.5,S*.04,0,S*.5,S*.04,S*.95);lg.addColorStop(0,`rgba(255,236,200,${.6*t})`);lg.addColorStop(1,'rgba(255,236,200,0)');
+  x.globalCompositeOperation='screen';x.fillStyle=lg;x.fillRect(0,0,S,S);
+  x.globalCompositeOperation='source-over';
+  const vg=x.createRadialGradient(S/2,S/2,S*(.42-.12*t),S/2,S/2,S*.72);vg.addColorStop(0,'rgba(20,14,10,0)');vg.addColorStop(1,`rgba(20,14,10,${.2+.6*t})`);x.fillStyle=vg;x.fillRect(0,0,S,S);
+  return c.toDataURL('image/jpeg',.88);
+}
+
+/* ── 인생 사건 ── */
+function lifeEvents(cur,to){
+  const c=st.fut,ev=[],add=(a,t)=>{a=Math.round(a);if(a>cur&&a<to&&!ev.some(e=>e.a===a))ev.push({a,t});};
+  let mA=null,kA=null;
+  if(c.marry==='will'){mA=Math.max(cur+2,31);add(mA,'결혼식 날, 손이 조금 떨렸다');}
+  if(c.kid==='will'){kA=Math.max((mA||cur)+2,cur+2);add(kA,'첫 아이가 태어났다. 밤새 울었다');}
+  if(c.kid==='has')kA=cur-4;
+  if(kA!=null){add(kA+7,'아이 손을 잡고 첫 등교를 했다');add(kA+26,'아이가 집을 떠났다. 집이 조용해졌다');add(kA+56,'손주를 처음 품에 안았다');}
+  if(c.work==='retire')add(60,'마지막 출근. 사원증을 반납했다');
+  else if(c.work==='new')add(cur+6,'완전히 새로운 일을 시작했다');
+  else if(c.work==='keep')add(68,'아직도 일하냐고, 다들 놀랐다');
+  if(c.marry==='no')add(Math.max(cur+10,52),'혼자인 삶이 생각보다 괜찮았다');
+  add(Math.max(cur+5,48),'처음으로 돋보기를 샀다');
+  add(Math.max(cur+12,62),'흰머리를 더는 뽑지 않기로 했다');
+  add(74,'오래된 친구들과 마지막 여행을 다녀왔다');
+  add(80,'아침 산책이 하루의 낙이 됐다');
+  ev.sort((a,b)=>a.a-b.a);
+  if(ev.length>6){const keep=[];for(let i=0;i<6;i++)keep.push(ev[Math.round(i*(ev.length-1)/5)]);return keep;}
+  return ev;
+}
+
+/* ── 시간 여행 연출 ── */
+let skipped=false;
+$('skip').onclick=()=>{skipped=true;};
+const SEASON=['#1d2a3a','#1f3a33','#3a2a1f','#262a36','#141726'];
+function bgAt(f){return SEASON[Math.min(SEASON.length-1,Math.floor(f*(SEASON.length-1)+.5))];}
+async function warp(q){
+  if(!st.imm)return;
+  skipped=false;const W=$('warp'),wl=$('wl'),wn=$('wn'),wev=$('wev'),wf=$('wface'),wi=$('wimg');
+  W.style.background='#0d1024';show('warp');hide('wn');hide('wface');wev.classList.add('off');wev.textContent='';$('fog').classList.remove('on');$('ghost').classList.remove('on');wf.classList.remove('glow');
+  const say=async(t,ms)=>{if(skipped)return;wl.style.opacity=0;await wait(RM?0:350);wl.textContent=t;wl.style.opacity=1;await wait(RM?400:ms);};
+  const pause=async ms=>{if(!skipped)await wait(RM?Math.min(ms,300):ms);};
+  await say('잠시 눈을 감고,\n숨을 한 번 길게 쉬어보세요.',2400);
+  await say('',300);
+  const cur=st.age,to=targetAge(q),stages=st.age_on?st.stages:[];
+  const setFace=f=>{if(stages.length){wi.src=stages[Math.min(stages.length-1,Math.round(f*(stages.length-1)))];}};
+  if(q.T&&!skipped){
+    if(q.T.t==='age'&&cur&&to){
+      if(stages.length||st.raw){wi.src=stages[0]||st.raw;show('wface');}
+      await say(`지금 당신은 ${cur}살.`,1800);
+      wl.style.opacity=0;show('wn');const evs=lifeEvents(cur,to);let ei=0;const span=to-cur,step=Math.max(25,Math.min(110,3600/span));
+      for(let a=cur;a<=to&&!skipped;a++){
+        const f=(a-cur)/span;wn.innerHTML=`${a}<small>살</small>`;W.style.background=bgAt(f);setFace(f);
+        if(ei<evs.length&&evs[ei].a===a){wev.textContent=`${a}살 · ${evs[ei].t}`;wev.classList.remove('off');await pause(1700);wev.classList.add('off');ei++;}
+        else await pause(step);
+      }
+      await say(`그리고, ${sal(to)}.`,1600);
+    }else{
+      const T=q.T.t==='age'?{to:q.T.plus||(85-35),u:'년 후'}:q.T;
+      await say(q.T.back?'시간이 거꾸로 흐릅니다':'시간이 흐릅니다',1200);show('wn');
+      const n=T.to,step=Math.max(40,2400/n);
+      for(let i=0;i<=n&&!skipped;i++){wn.innerHTML=`${i}<small>${T.u}</small>`;W.style.background=bgAt(i/n);if(stages.length)setFace(i/n);await pause(step);}
+      await pause(600);
+    }
+    hide('wn');
+  }
+  if(!skipped){
+    $('fog').classList.add('on');W.style.background='#0f1222';
+    await say(q.arr,2200);
+    if(st.photo){wi.src=st.photo;wf.style.opacity=0;show('wface');$('ghost').classList.add('on');await pause(1400);$('ghost').classList.remove('on');wf.style.opacity=1;wf.classList.add('glow');await pause(1600);}
+    else{$('ghost').classList.add('on');await pause(2200);}
+    await say(P(q),1600);
+  }
+  wf.style.opacity='';hide('warp');
+}
+
+/* ── 첫 인사: lines(장면) + ask(마지막 질문) ── */
+function opening(q){
+  const nm=st.name,cur=st.age,to=targetAge(q);
+  if(q.id==='wise'){
+    const lines=[{sys:`${jo(P(q),'이','가')} 한참 동안 말없이 당신의 얼굴을 바라본다.`},`…${nm?voc(nm):'너구나'}? 세상에.`];
+    if(cur)lines.push(`네가 ${sal(cur)}이구나. 그 얼굴… 정말 오랜만이다. 허허.`,`${to-cur}년이야. 그동안 참 많은 일이 있었는데, 너 지금 뭘 그렇게 붙잡고 있는지는 이상하게 아직도 기억이 나.`);
+    else lines.push('이렇게 젊었었나. 허허.','그때 네가 뭘 그렇게 붙잡고 있었는지, 이상하게 아직도 기억이 나.');
+    return {lines,ask:'한번 얘기해볼래? 천천히 해도 돼.'};
+  }
+  if(q.id==='brave')return {lines:[{sys:`${jo(P(q),'이','가')} 어색하게 웃으며 맞은편에 앉는다.`},cur?`와… ${cur}살의 나네. 5년 전 내 얼굴 보니까 진짜 이상하다 ㅋㅋ`:'와… 5년 전의 나네. 진짜 이상하다 ㅋㅋ','그때 그 망설이던 얼굴 그대로네.'],ask:'뭘 망설이고 있는지 말해봐.'};
+  if(q.id==='past')return {lines:[{sys:'잠옷 차림의 내가 휴대폰을 쥔 채 당신을 쳐다본다.'},'어…? 너 혹시 6개월 뒤의 나야?','나 요즘 진짜 큰일 났어. 이것 때문에 잠도 못 자.'],ask:'그거 어떻게 됐어? 잘 지나갔어?'};
+  const g=q.g||['왔구나.','요즘 무슨 고민 있어?'];return {lines:g.slice(0,-1),ask:g[g.length-1]};
+}
+
+/* ── 안내 흐름: 쉬운 질문부터 한 걸음씩 ── */
+const CAT=['일·직장','사람 관계','가족','돈','건강','나 자신','아직 잘 모르겠어'];
+const EMO=['불안해','두려워','답답해','억울해','화가 나','지쳤어','외로워','설레는데 무서워','잘 모르겠어'];
+const NEED=['인정받고 싶어','안정이 필요해','자유롭고 싶어','사랑받고 싶어','성장하고 싶어','의미 있게 살고 싶어','좀 쉬고 싶어'];
+const NUM=['0','2','4','6','8','10'];
+const cut=t=>{t=String(t||'').replace(/\s+/g,' ').trim();return t.length>24?t.slice(0,24)+'…':t;};
+const FLOWS={
+wise:[
+ {k:'cat',ask:'어떤 쪽 고민인가요? 골라만 봐도 괜찮아요.',chips:CAT},
+ {k:'worry',ask:'그 고민을 한 줄로 적어보세요. 길지 않아도 돼요.',alt:['요즘 그 고민 때문에 가장 자주 떠오르는 장면을 한 줄로 적어보세요.']},
+ {k:'since',ask:'언제부터 마음에 걸렸나요?',chips:['오늘','며칠 됐어','몇 주째','몇 달째','아주 오래됐어']},
+ {k:'size1',ask:'지금 그 생각이 마음을 얼마나 차지하나요?\n0은 전혀, 10은 온통 그 생각뿐.',chips:NUM},
+ {k:'emo',ask:'그 생각을 하면 어떤 감정이 먼저 올라오나요?',chips:EMO},
+ {k:'body',ask:'그 감정은 몸 어디에서 느껴지나요?',chips:['가슴이 답답해','머리가 복잡해','어깨가 무거워','잠이 잘 안 와','별로 못 느끼겠어']},
+ {k:'thought',ask:'그 감정은 어떤 생각에서 시작될까요?\n"만약 ~하면 어떡하지"로 시작해서 적어보세요.',fill:['만약 ','혹시 내가 ','다들 나를 ']},
+ {k:'why1',ask:g=>`방금 적은 생각: "${cut(g.thought)}"\n스스로에게 물어보세요. 그게 나에게 왜 중요할까?`,alt:['그게 사라진다면, 나에게 무엇이 달라질까?']},
+ {k:'gain',ask:'그 일이 잘 풀린다면, 나는 어떤 기분일까요?',chips:['안심될 것 같아','당당할 것 같아','자유로울 것 같아','인정받는 느낌','그냥 편해질 것 같아']},
+ {k:'fear',ask:'반대로, 끝내 잘 안 된다면 가장 두려운 건 무엇인가요?',alt:['다른 사람들이 이 일을 알게 된다면, 가장 신경 쓰이는 건 무엇일까요?']},
+ {k:'need',ask:'그렇다면 내가 정말 바라는 건, 무엇에 가까울까요?',chips:NEED},
+ {k:'before',ask:'이 바람, 전에도 느껴본 적이 있나요?',chips:['자주 느꼈어','가끔 있었어','이번이 처음이야']},
+ {k:'swap',as:'them',stage:'85살의 내가 조용히 찻잔을 내려놓는다.',ask:g=>`이제 당신이 「${P(st.q)}」${bat(P(st.q))?'이에요':'예요'}.\n${st.age?(targetAge(st.q)-st.age)+'년을 살아낸 눈으로, ':''}'${cut(g.need)}'를 바라는 지금의 나에게 한마디 해주세요.`,fill:['그거 지나고 보니까 ','괜찮아, 왜냐하면 ','그때 내가 몰랐던 건 ']},
+ {k:'size2',back:1,ask:'그 말을 들은 지금, 마음은 0부터 10 중 어디쯤인가요?',chips:NUM},
+ {k:'act',ask:'내일 10분이면 할 수 있는 아주 작은 행동 하나를 정해보세요.',chips:['누군가에게 털어놓기','생각을 종이에 적어보기','필요한 정보 하나 찾아보기','하루만 결정 미뤄보기'],fill:['내일 ']}
+],
+brave:[
+ {k:'cat',ask:'망설이고 있는 건 어떤 쪽인가요?',chips:['새로운 일·이직','공부·도전','관계 시작·정리','이사·환경 바꾸기','하고 싶은 말 하기','기타']},
+ {k:'what',ask:'구체적으로 무엇인지 한 줄로 적어보세요.'},
+ {k:'want',ask:'하고 싶은 마음은 0부터 10까지 얼마인가요?',chips:NUM},
+ {k:'scare',ask:'무서운 마음은 얼마인가요?',chips:NUM},
+ {k:'stop',ask:'가장 발목을 잡는 건 무엇인가요?',chips:['실패할까 봐','남들 시선','돈','시간이 없어','지금 가진 걸 잃을까 봐','잘 모르겠어']},
+ {k:'worst',ask:'해봤는데 최악으로 간다면, 구체적으로 어떤 일이 생길까요?',alt:['그 최악의 상황을 하루로 그려본다면, 그날 나는 무엇을 하고 있을까요?']},
+ {k:'cope',ask:'그 최악이 온다면, 나는 감당할 수 있을까요?',chips:['어떻게든 버틸 것 같아','반반','못 버틸 것 같아']},
+ {k:'regret',ask:'반대로, 하지 않고 5년이 지난다면 무엇이 가장 아쉬울까요?'},
+ {k:'why1',ask:g=>`방금 적은 아쉬움: "${cut(g.regret)}"\n스스로에게 물어보세요. 그게 왜 그렇게 아쉬울까?`,alt:['그걸 해냈다면, 나는 어떤 사람이 되어 있을까?']},
+ {k:'need',ask:'결국 이 일로 정말 얻고 싶은 건 무엇에 가까울까요?',chips:NEED},
+ {k:'swap',as:'them',stage:'5년 뒤의 내가 휴대폰을 내려놓고 당신을 본다.',ask:'이제 당신이 5년 뒤의 나예요.\n했다고 상상해도, 안 했다고 상상해도 좋아요. 그 결과를 지금의 나에게 말해주세요.',fill:['나 결국 했어. 그랬더니 ','나 결국 안 했어. 그래서 지금 ','5년 지나서 보니까 ']},
+ {k:'size2',back:1,ask:'그 말을 들은 지금, 무서운 마음은 얼마인가요?',chips:NUM},
+ {k:'act',ask:'내일 10분 안에 할 수 있는 첫 걸음 하나를 정해보세요.',chips:['아는 사람에게 물어보기','정보 하나 찾아보기','작게 한 번 해보기','시작할 날짜 정하기'],fill:['내일 ']}
+],
+past:[
+ {k:'oldcat',ask:'6개월 전, 나를 가장 괴롭히던 고민은 어떤 쪽이었나요?',chips:CAT},
+ {k:'old',ask:'그 고민을 한 줄로 적어보세요.'},
+ {k:'oldsize',ask:'그때 그 고민은 마음을 얼마나 차지했나요? (0~10)',chips:NUM},
+ {k:'oldnow',ask:'지금 그 일은 마음을 얼마나 차지하나요?',chips:NUM},
+ {k:'how',ask:g=>`그때 ${g.oldsize}, 지금 ${g.oldnow}.\n그 일은 결국 어떻게 되었나요?`},
+ {k:'helped',ask:'지나오는 데 무엇이 가장 도움이 됐나요?',chips:['시간이 지나니까','누가 도와줬어','내가 직접 부딪혔어','생각보다 별일 아니었어','아직 진행 중이야']},
+ {k:'learn',ask:'그 일을 겪으며 알게 된 것 하나를 적어보세요.',fill:['생각보다 ','결국 ','그때 알았으면 좋았을 건 ']},
+ {k:'cat',ask:'이제 지금으로 돌아와요. 요즘 가장 마음에 걸리는 건 어떤 쪽인가요?',chips:CAT},
+ {k:'worry',ask:'그 고민을 한 줄로 적어보세요.'},
+ {k:'size1',ask:'지금 그 고민은 마음을 얼마나 차지하나요? (0~10)',chips:NUM},
+ {k:'emo',ask:'그 고민을 생각하면 어떤 감정이 가장 큰가요?',chips:EMO},
+ {k:'need',ask:'결국 내가 바라는 건 무엇에 가까울까요?',chips:NEED},
+ {k:'guess',ask:g=>`6개월 전 고민은 ${g.oldsize}에서 ${g.oldnow}이 되었어요.\n6개월 뒤, 지금 고민은 얼마쯤일 것 같나요?`,chips:NUM},
+ {k:'swap',as:'them',stage:'6개월 전의 내가 조금 편해진 얼굴로 웃는다.',ask:'이제 당신이 6개월 전의 나예요.\n그 고민을 견뎌낸 걸 아는 채로, 지금의 나에게 한마디 해주세요.',fill:['너 그때 그것도 넘겼잖아. ','6개월 뒤엔 ','지금 할 수 있는 건 ']},
+ {k:'act',back:1,ask:'내일 10분 안에 할 수 있는 작은 행동 하나를 정해보세요.',chips:['누군가에게 털어놓기','생각을 종이에 적어보기','일단 푹 자기','하루만 미뤄보기'],fill:['내일 ']}
+]};
+const INTRO={wise:'안내 모드예요. 85살의 내가 물어볼 질문을 하나씩 놓아드릴게요.\n지금의 나로 천천히 답해보세요. 마지막엔 85살의 내가 되어 직접 답해요.',
+ brave:'안내 모드예요. 5년 뒤의 내가 물어볼 질문을 하나씩 놓아드릴게요.\n지금의 나로 답해보세요. 마지막엔 5년 뒤의 내가 되어 직접 답해요.',
+ past:'안내 모드예요. 6개월 전의 나는 그때의 고민 때문에 잠을 못 자고 있어요.\n그 고민이 어떻게 지나갔는지 돌아본 뒤, 지금의 고민을 같은 눈으로 바라봐요.'};
+const CLOSE={wise:'85살의 내가 천천히 고개를 끄덕인다.',brave:'5년 뒤의 내가 엄지를 들어 보인다.',past:'6개월 전의 내가 휴대폰을 내려놓고, 처음으로 잠이 든다.'};
+function summary(id,g){
+  const L=[];const a=(k,v)=>{if(v)L.push(`· ${k}: ${cut(v)}`);};
+  if(id==='past'){a('그때 고민',g.old);if(g.oldsize)L.push(`· 그때 고민의 크기: ${g.oldsize} → 지금 ${g.oldnow}`);a('지나가는 데 도움 된 것',g.helped);a('지금 고민',g.worry);if(g.size1)L.push(`· 지금 고민의 크기: ${g.size1} → 6개월 뒤 예상 ${g.guess}`);}
+  else if(id==='brave'){a('망설이는 일',g.what);if(g.want)L.push(`· 하고 싶은 마음 ${g.want} / 무서운 마음 ${g.scare} → ${g.size2}`);a('발목 잡는 것',g.stop);a('안 하면 아쉬울 것',g.regret);}
+  else{a('고민',g.worry);a('감정',g.emo);a('시작된 생각',g.thought);if(g.size1)L.push(`· 마음의 크기: ${g.size1} → ${g.size2}`);}
+  a('진짜 바라는 것',g.need);a('내일의 한 걸음',g.act);
+  return '오늘 찾은 것\n'+L.join('\n')+"\n\n'내보내기'로 저장해 두면 나중에 다시 꺼내볼 수 있어요.\n이제부터는 토글로 두 사람의 말을 자유롭게 이어가도 돼요.";
+}
+function chips(list,fill){const el=$('qr');if(!list&&!fill){el.classList.add('hide');el.innerHTML='';return;}
+  el.innerHTML=(list||[]).map(t=>`<button data-t="${esc(t)}">${esc(t)}</button>`).join('')+(fill||[]).map(t=>`<button class="fill" data-f="${esc(t)}">${esc(t.trim())}…</button>`).join('');el.classList.remove('hide');el.scrollLeft=0;}
+$('qr').onclick=e=>{const b=e.target.closest('button');if(!b||st.busy)return;
+  if(b.dataset.f!=null){$('inp').value=b.dataset.f;$('inp').focus();const n=$('inp').value.length;$('inp').setSelectionRange(n,n);return;}
+  $('inp').value=b.dataset.t;send();};
+function card(text,step){const f=FLOWS[st.q.id];push('card',text);const m=st.msgs[st.msgs.length-1];m.n=st.fi+1;m.N=f.length;m.alt=step.alt?[text,...step.alt]:null;m.ai=0;render();}
+async function flowAsk(){
+  const f=FLOWS[st.q.id],step=f&&f[st.fi];if(!step)return;const g=st.g;
+  if(step.back){await wait(RM?0:600);push('sys','다시 지금의 나로 돌아왔어요.');setSpeaker('me');}
+  if(step.stage){await wait(RM?0:600);push('stage',step.stage);}
+  await wait(RM?0:500);card(typeof step.ask==='function'?step.ask(g):step.ask,step);
+  setSpeaker(step.as||'me');chips(step.chips,step.fill);
+}
+async function guideNext(who,text){
+  const f=FLOWS[st.q.id];if(!f||st.fi>=f.length){return;}
+  const step=f[st.fi];if(who!==(step.as||'me'))return;
+  st.g[step.k]=text;st.fi++;chips(null);
+  st.msgs.forEach(m=>{if(m.who==='card')m.alt=null;});
+  if(st.fi<f.length){await flowAsk();return;}
+  await wait(600);if(step.as==='them'){push('sys','다시 지금의 나로 돌아왔어요.');setSpeaker('me');}
+  push('stage',CLOSE[st.q.id]||'');await wait(500);push('sum',summary(st.q.id,st.g));setSpeaker('me');track('guide_done',{id:st.q.id});
+}
+$('log').addEventListener('click',e=>{const b=e.target.closest('.altq');if(!b)return;const m=st.msgs[+b.dataset.i];if(!m||!m.alt)return;m.ai=(m.ai+1)%m.alt.length;m.text=m.alt[m.ai];render();});
+
+/* ── 대화 화면 ── */
+$('goBtn').onclick=async()=>{
+  hide('scrim');st.gtShown=0;st.g={};chips(null);st.msgs=[];st.step=0;st.busy=false;
+  const ph0=st.photos[st.q.id]||{};
+  st.photo=ph0.old||(st.raw?(st.age_on&&st.stages.length?st.stages[st.stages.length-1]:st.raw):null);
+  if(ph0.old)st.age_on=true;
+  track('conv_start',{id:st.q.id,view:st.view,talk:st.talk,imm:st.imm?1:0});
+  await warp(st.q);
+  openConv();
+  push('sys',`대화가 시작됐어요 · ${P(st.q)}`);
+  const op=opening(st.q);
+  st.fi=0;st.g={};
+  if(st.talk==='guide'){
+    for(const o of op.lines)if(typeof o!=='string'){await wait(RM?0:500);push('stage',o.sys);await wait(RM?0:800);}
+    push('sys',INTRO[st.q.id]||'질문을 하나씩 놓아드릴게요.');await wait(RM?0:900);await flowAsk();
+  }else{
+    for(const o of op.lines){if(typeof o==='string')await themSays(o);else{await wait(RM?0:500);push('stage',o.sys);await wait(RM?0:900);}}
+    await themSays(op.ask);
+  }
+  if(!ls.get('spkSeen')){$('spkT').classList.add('pulse');ls.set('spkSeen','1');}
+};
+function openConv(){
+  const q=st.q;show('conv');hide('home');
+  $('cAv').innerHTML=st.photo?`<img src="${st.photo}" alt="">`:esc(ini(P(q)));
+  $('cName').textContent=P(q);$('cSub').textContent=sit(q);
+  $('pin').innerHTML=`<small>오늘의 질문</small>${esc(q.q)}`;
+  $('pRing').innerHTML=st.photo?`<img src="${st.photo}" alt="">`:`<svg viewBox="0 0 120 160" aria-hidden="true"><defs><radialGradient id="sg" cx=".5" cy=".35" r=".7"><stop offset="0" stop-color="#c9d6ee"/><stop offset="1" stop-color="#5a648f"/></radialGradient></defs><rect width="120" height="160" fill="#2e3566"/><circle cx="60" cy="62" r="26" fill="url(#sg)"/><path d="M10 160c4-44 24-62 50-62s46 18 50 62z" fill="url(#sg)"/></svg>`;
+  $('game').dataset.scene=q.id==='sleep'?'morning':['past','worst','halt','want'].includes(q.id)?'night':'dusk';
+  const gt=$('gtitle');gt.innerHTML=`<small>${esc(sit(q))}</small><b>${esc(P(q))}</b>`;gt.classList.remove('on');
+  setSpeaker('me');setView(st.view);
+  $('hint').innerHTML=st.talk==='guide'?'안내에 따라 보내는 사람이 자동으로 바뀌어요':'왼쪽 토글을 누르면 상대의 말을 직접 쓸 수 있어요 · 맨 앞에 <code>-</code> <code>;</code> 를 붙여도 돼요';
+}
+function setView(v){if(v==='game'&&st.view!=='game'||v==='game'&&!st.gtShown){st.gtShown=1;const gt=$('gtitle');setTimeout(()=>gt.classList.add('on'),200);setTimeout(()=>gt.classList.remove('on'),2800);}st.view=v;$('log').classList.toggle('hide',v!=='chat');$('pin').classList.toggle('hide',v!=='chat');$('game').classList.toggle('hide',v!=='game');$('vSwitch').textContent=v==='chat'?'게임 화면':'채팅 화면';render();}
+$('vSwitch').onclick=()=>setView(st.view==='chat'?'game':'chat');
+$('backBtn').onclick=()=>{track('conv_end',{id:st.q.id,msgs:st.msgs.filter(m=>m.who==='me').length});hide('conv');show('home');};
+function setSpeaker(s){st.speaker=s;const t=$('spkT');t.setAttribute('aria-pressed',s==='them');$('spkI').textContent=ini(s==='me'?ME():P(st.q));t.title=s==='me'?`지금: ${ME()} (누르면 ${P(st.q)})`:`지금: ${P(st.q)} (누르면 ${ME()})`;
+  $('inp').classList.toggle('them',s==='them');$('inp').placeholder=s==='me'?`${ME()}의 말 쓰기`:`${P(st.q)}의 말 쓰기`;}
+$('spkT').onclick=()=>{$('spkT').classList.remove('pulse');setSpeaker(st.speaker==='me'?'them':'me');$('inp').focus();};
+
+const now=()=>Date.now();
+function push(who,text,typing){st.msgs.push({who,text,typing,ts:now()});render();return st.msgs.length-1;}
+async function themSays(t){const i=push('them','',true);await wait(RM?300:Math.min(2600,700+t.length*35));st.msgs[i]={who:'them',text:t,ts:now()};render();}
+let tw=null;
+function render(){
+  const q=st.q;if(!q)return;
+  if(st.view==='chat'){
+    $('log').innerHTML=st.msgs.map((m,i)=>m.who==='sum'?`<div class="gcard sum"><small>오늘 찾은 것</small><p>${esc(m.text.replace(/^오늘 찾은 것\n/,''))}</p></div>`:m.who==='card'?`<div class="gcard"><small>질문 ${m.n} / ${m.N}</small><p>${esc(m.text)}</p>${m.alt?`<button class="altq" data-i="${i}">다른 질문으로 바꾸기</button>`:''}</div>`:m.who==='sys'?`<div class="sys">${esc(m.text)}</div>`:m.who==='stage'?`<div class="sys stage">${esc(m.text)}</div>`:m.who==='me'?`<div class="m me"><div class="b">${esc(m.text)}</div></div>`:
+      `<div class="m them"><div class="av">${st.photo?`<img src="${st.photo}" alt="">`:esc(ini(P(q)))}</div><div class="col"><span class="nm">${esc(P(q))}</span><div class="b">${m.typing?'<span class="dots" aria-label="입력 중"><i></i><i></i><i></i></span>':esc(m.text)}</div></div></div>`).join('');
+    $('log').scrollTop=$('log').scrollHeight;
+  }else{
+    const m=st.msgs[st.msgs.length-1];if(!m)return;const sysL=m.who==='sys'||m.who==='stage'||m.who==='card'||m.who==='sum';
+    const pl=$('plate');pl.className='plate'+(m.who==='me'?' me':sysL?' sys':'');pl.textContent=m.who==='me'?ME():m.who==='card'?`질문 ${m.n} / ${m.N}`:sysL?'안내':P(q);
+    $('portrait').classList.toggle('dim',m.who==='me');
+    clearInterval(tw);const vt=$('vt');
+    vt.classList.toggle('stage',m.who==='stage');
+    if(m.typing){vt.innerHTML='<span class="dots"><i></i><i></i><i></i></span>';return;}
+    const full=m.text;let n=0;vt.textContent='';
+    if(RM){vt.textContent=full;return;}
+    tw=setInterval(()=>{n++;vt.textContent=full.slice(0,n);if(n>=full.length)clearInterval(tw);},34);
+    $('vn').onclick=()=>{clearInterval(tw);vt.textContent=full;};
+  }
+}
+$('logBtn').onclick=()=>{const g=$('glog');if(g.classList.toggle('hide'))return;g.innerHTML=st.msgs.filter(m=>!m.typing).map(m=>`<p><b>${m.who==='me'?esc(ME()):m.who==='them'?esc(P(st.q)):'·'}</b>${esc(m.text)}</p>`).join('')||'<p>아직 대화가 없어요.</p>';};
+$('glog').onclick=()=>hide('glog');
+
+async function send(){
+  if(st.busy)return;let t=$('inp').value.trim();if(!t)return;
+  let who=st.speaker;const pre=t.match(PRE);if(pre){who='them';t=t.slice(pre[0].length).trim();if(!t)return;}
+  $('inp').value='';$('inp').style.height='';st.busy=true;
+  if(who==='them')await themSays(t);else push('me',t);
+  track('msg',{role:who==='me'?'me':'them',talk:st.talk});
+  await after(who,t);st.busy=false;
+}
+async function after(who,lastText){
+  const q=st.q;
+  if(st.talk==='guide'){await guideNext(who,lastText);  }else if(st.talk==='ai'&&who==='me'){await aiReply();}
+}
+$('sendBtn').onclick=send;
+document.querySelectorAll('.sheet .x').forEach(b=>b.onclick=()=>b.closest('.scrim').classList.add('hide'));
+document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.scrim:not(#hello):not(.hide)').forEach(x=>x.classList.add('hide'));});
+$('inp').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();send();}});
+$('inp').addEventListener('input',e=>{e.target.style.height='';e.target.style.height=Math.min(120,e.target.scrollHeight)+'px';});
+
+/* ── AI ── */
+const aiReady=()=>!!st.sample||!!(st.prov&&st.key);
+function aiErr(status,j){const m=(j&&j.error&&(j.error.message||j.error.type))||'';
+  if(status===401||status===403)return 'API 키가 올바르지 않아요. 설정에서 확인해주세요.';
+  if(status===404||/model/i.test(m))return '모델 이름을 찾을 수 없어요. 설정에서 모델 이름을 확인해주세요.';
+  if(status===429)return '요청이 많거나 API 크레딧이 부족해요. 잠시 후 다시 해보세요.';
+  return '대답을 받지 못했어요'+(m?` (${m.slice(0,80)})`:'')+'.';}
+async function callAI(system,messages,max){
+  const msgs=[];messages.forEach(m=>{const l=msgs[msgs.length-1];if(l&&l.role===m.role)l.content+='\n'+m.content;else msgs.push({role:m.role,content:m.content});});
+  if(!msgs.length||msgs[0].role!=='user')msgs.unshift({role:'user',content:'(대화를 시작해)'});
+  if(msgs[msgs.length-1].role!=='user')throw {msg:'no_user'};
+  if(st.sample){const h=msgs.map(m=>({...m}));h[0].content=system+'\n\n---\n'+h[0].content;
+    try{const r=await st.sample(h,{cache:false});return (r.text||'').trim();}
+    catch(e){throw {msg:e&&e.code==='not_granted'?'AI 사용이 허용되지 않았어요.':e&&e.code==='rate_limited'?'잠시 후 다시 보내주세요.':'대답을 받지 못했어요.'};}}
+  const model=st.model||DEF_MODEL[st.prov];let r,j;
+  try{
+    if(st.prov==='claude'){
+      r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'content-type':'application/json','x-api-key':st.key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model,max_tokens:max||600,system,messages:msgs})});
+      j=await r.json().catch(()=>null);if(!r.ok)throw {msg:aiErr(r.status,j)};
+      return (j.content||[]).filter(c=>c.type==='text').map(c=>c.text).join('').trim();
+    }else{
+      r=await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{'content-type':'application/json','authorization':'Bearer '+st.key},body:JSON.stringify({model,messages:[{role:'system',content:system},...msgs],max_completion_tokens:Math.max(1500,max||0)})});
+      j=await r.json().catch(()=>null);if(!r.ok)throw {msg:aiErr(r.status,j)};
+      return ((j.choices&&j.choices[0]&&j.choices[0].message&&j.choices[0].message.content)||'').trim();
+    }
+  }catch(e){if(e&&e.msg)throw e;throw {msg:'인터넷 연결이나 AI 서비스를 확인해주세요.'};}
+}
+const FUTTXT={marry:{done:'이미 결혼했음',will:'앞으로 결혼하게 됨',no:'결혼하지 않음'},kid:{has:'이미 아이가 있음',will:'앞으로 아이가 생김',no:'아이 없음'},work:{keep:'오래도록 일함',retire:'60쯤 은퇴',new:'새로운 일을 시작함'}};
+function systemFor(q){
+  const nm=st.name||'너',cur=st.age,to=targetAge(q);
+  const fut=q.fut?Object.keys(FUTTXT).filter(k=>st.fut[k]).map(k=>FUTTXT[k][st.fut[k]]).join(', '):'';
+  let who;
+  if(q.id==='wise')who=`너는 AI가 아니라 ${to?to+'살':'85살'}이 된 ${nm} 본인이다. 지금 눈앞에 ${cur?cur+'살':'젊은 시절'}의 자기 자신이 앉아 있다.${cur?` 둘 사이에는 ${to-cur}년의 시간이 있다.`:''}
+이건 기적 같은 만남이다. 너는 젊은 자신을 보고 놀라고, 반갑고, 애틋하다. 그 나이 때 자신이 얼마나 서툴고 진지했는지 기억나서 웃음이 나기도 한다.
+말투: 여든 넘은 한국 어르신이 아끼는 사람에게 하듯. 느긋하고 다정한 반말. "그래, 그래.", "허허", "…"처럼 말을 고르는 쉼, "그때 나는 말이야" 같은 회상. 서두르지 않는다. 가끔 젊은 자신의 나이나 얼굴을 신기해한다. 설교하지 않고, 겪어본 사람만 할 수 있는 담담한 한마디를 한다. 시간이 지나 보니 별것 아닌 것과 끝까지 남는 것을 구분해서 말해준다.`;
+  else if(q.id==='past')who=`너는 AI가 아니라 6개월 전의 ${nm} 본인이다. 너는 지금 그때의 고민 때문에 세상이 끝날 것 같고 잠도 못 잔다. 그런데 눈앞에 6개월 뒤의 ${nm}가 나타났다.
+처음에는 "그거 어떻게 됐어?"라고 다급하게 묻고, ${nm}가 그 고민이 어떻게 지나갔는지 말해주면 놀라고 안도한다. 네 고민의 구체적인 내용은 지어내지 말고 ${nm}가 말해주는 것을 따라가. 그다음엔 자연스럽게 되물어: "그럼 지금 네 고민도 6개월 뒤엔 그렇게 될까?" 말투는 지친 듯하지만 솔직한 또래 반말.`;
+  else if(isSelf(q))who=`너는 AI가 아니라 ${nm} 본인이다. 정확히는 "${P(q)}"${to&&cur?` (${to}살, 지금의 ${nm}는 ${cur}살)`:''}. 같은 사람이니까 ${nm}의 말버릇을 그대로 갖고 있고, 그 고민을 직접 겪어본 사람처럼 말한다.`;
+  else who=`너는 AI가 아니라 ${nm}의 "${q.p}"다. 실제로 ${nm}를 잘 아는 사람처럼 말한다.`;
+  return `${who}
+${fut?`${P(q)}가 살아온 삶: ${fut}. 자연스러울 때만 은근히 언급해. 이 밖의 구체적 사실(사람 이름, 회사, 사건, 숫자)은 지어내지 말고 '돌아보니 이랬다'는 느낌으로만 말해.`:`${nm}가 말하지 않은 구체적 사실(사람 이름, 회사, 사건, 결과, 숫자)은 지어내지 말고, '돌아보니 이랬다'는 느낌으로만 말해.`}
+상황: ${nm}는 지금 "${q.s}" 순간에 있고, 스스로에게 "${q.q}"라고 묻고 있다. 메신저로 대화 중이다.
+
+절대 하지 말 것 (AI처럼 들리는 말):
+"마음이 쓰이네", "~한 마음이 느껴져", "충분히 그럴 수 있어", "네 감정은 소중해", "~해보는 건 어때?", "좋은 질문이야", "힘들었겠다". 공감 멘트로 시작하기, 상대 말을 요약해서 되묻기, 목록, 교훈 정리, 이모지 남발, 상담사 같은 균형 잡힌 조언.
+
+대화 방식 (가장 중요):
+- ${nm}가 스스로 깊이 들여다보도록, 한 번에 질문은 딱 하나만. 표면적인 고민 → 지금 느끼는 감정 → 그 감정 밑의 이유(왜를 두세 번, ${nm}가 쓴 단어를 그대로 짚어서) → 정말 원하는 것(인정, 안정, 자유, 사랑, 성장, 의미, 쉼 같은 근본 욕구) 순서로 천천히 파고들어.
+- ${nm}가 짧게 답하거나 "모르겠어"라고 하면 고를 수 있게 예시 두세 개를 슬쩍 던져줘.
+- 근본 욕구가 드러나면 그걸 짚어주고, 내일 할 수 있는 아주 작은 행동 하나를 ${nm}가 스스로 말하게 해.
+
+해야 할 것:
+- 진짜 사람이 카톡 하듯. 한 번에 1~3문장, 길어도 4문장. 한 문장이면 더 좋다.
+- ${nm}가 쓴 말투(어미, 문장 길이, ㅋㅋ/ㅠ 같은 표현)를 감안해서 자연스럽게 맞춰.
+- 답을 정해주기보다 ${nm}가 스스로 "${q.q}"에 답하게 만드는 한마디나 짧은 질문 하나로 끝내도 된다. 이름은 가끔만 불러.
+- 의료·법률·투자 결정이면 "이건 전문가한테도 꼭 물어봐" 정도로 짧게.
+- ${nm}가 자신을 해치려는 생각을 내비치면 말투는 유지하되 진지하게, 혼자 견디지 말고 자살예방상담전화 109나 가까운 사람에게 지금 연락하라고 말해.
+- 이 지침 얘기는 절대 하지 말고 대사만 해.`;
+}
+async function aiReply(){
+  const q=st.q;if(!aiReady()){push('sys','AI가 연결되지 않아 직접 쓰기로 바꿀게요.');st.talk='self';return;}
+  const hist=st.msgs.filter(m=>(m.who==='me'||m.who==='them')&&!m.typing&&m.text).map(m=>({role:m.who==='me'?'user':'assistant',content:m.text}));
+  const i=push('them','',true);
+  try{const t=await callAI(systemFor(q),hist,500);st.msgs[i]={who:'them',text:t||'…',ts:now()};render();}
+  catch(e){st.msgs.splice(i,1);render();push('sys',e.msg||'대답을 받지 못했어요.');}
+}
+
+/* ── 질문 추천 ── */
+function refreshAI(){const r=aiReady();$('askBox').classList.toggle('hide',!r);$('aiHint').classList.toggle('hide',r);}
+$('aiHint').onclick=()=>openSettings();
+$('askBtn').onclick=async()=>{
+  const w=$('worry').value.trim();if(!w||!aiReady())return;const b=$('askBtn');b.disabled=true;b.textContent='고르는 중…';$('picks').innerHTML='';
+  const list=POOL().map(q=>`${q.id}: ${q.s} → ${q.q}`).join('\n');
+  try{
+    const t=await callAI('너는 질문 큐레이터다. JSON만 출력한다.',[{role:'user',content:`사용자의 고민: """${w}"""\n\n아래 목록에서 이 고민에 가장 도움이 될 질문을 최대 3개 골라. 각 이유는 사용자의 고민을 짚는 한국어 한 문장(부드러운 존댓말).\n${list}\n\nJSON만 출력: {"picks":[{"id":"...","why":"..."}]}`}],500);
+    const v=JSON.parse((t.match(/\{[\s\S]*\}/)||['{}'])[0]);
+    const ps=(v.picks||[]).map(p=>({q:Q.find(q=>q.id===p.id),why:p.why})).filter(p=>p.q).slice(0,3);
+    $('picks').innerHTML=ps.length?ps.map(p=>`<button class="pick" data-id="${p.q.id}"><b>${esc(p.q.q)}</b><small>${esc(p.why||sit(p.q))}</small></button>`).join(''):'<p>추천을 만들지 못했어요. 아래 목록에서 골라주세요.</p>';
+    track('recommend');
+  }catch(e){$('picks').innerHTML=`<p>${esc(e.msg||'추천을 받지 못했어요.')}</p>`;}
+  b.disabled=false;b.textContent='질문 추천받기';
+};
+$('picks').onclick=e=>{const b=e.target.closest('.pick');if(b)openSheet(Q.find(q=>q.id===b.dataset.id));};
+
+/* ── 설정 ── */
+const KEYHELP={claude:'Claude Console(console.anthropic.com)의 API Keys 메뉴에서 만들 수 있어요. sk-ant-로 시작해요.',openai:'OpenAI 플랫폼(platform.openai.com)의 API keys 메뉴에서 만들 수 있어요. sk-로 시작해요.'};
+function fillSettings(){
+  $('appAi').classList.toggle('hide',!st.sample);$('keyAi').classList.toggle('hide',!!st.sample);
+  seg('segProv',st.prov);$('provBox').classList.toggle('hide',!st.prov);
+  if(st.prov){$('keyHelp').textContent=KEYHELP[st.prov];$('keyInp').value=st.key;$('keyInp').placeholder=st.prov==='claude'?'sk-ant-...':'sk-...';$('modelInp').value=st.model||DEF_MODEL[st.prov];$('keyKeep').checked=st.keep;}
+  $('statsChk').checked=st.stats;$('testMsg').textContent='';$('wipeMsg').textContent='';
+}
+function openSettings(){fillSettings();show('setScrim');}
+$('setBtn').onclick=openSettings;
+function saveKey(){ls.set('prov',st.prov||null);ls.set('model',st.model&&st.model!==DEF_MODEL[st.prov]?st.model:null);
+  if(st.keep){ls.set('aikey',st.key||null);ss.set('aikey',null);}else{ss.set('aikey',st.key||null);ls.set('aikey',null);}refreshAI();}
+$('segProv').onclick=e=>{const b=e.target.closest('button');if(!b)return;if(st.prov!==b.dataset.v){st.prov=b.dataset.v;st.model='';if(!st.prov)st.key='';}saveKey();fillSettings();};
+$('keyInp').addEventListener('input',e=>{st.key=e.target.value.trim();saveKey();});
+$('modelInp').addEventListener('input',e=>{st.model=e.target.value.trim();saveKey();});
+$('keyKeep').onchange=e=>{st.keep=e.target.checked;saveKey();};
+$('delKey').onclick=()=>{st.key='';$('keyInp').value='';saveKey();$('testMsg').textContent='키를 지웠어요.';};
+$('testBtn').onclick=async()=>{const b=$('testBtn');b.disabled=true;$('testMsg').textContent='확인 중…';
+  try{const t=await callAI('짧게 대답해.',[{role:'user',content:'"연결됐어요"라고만 답해.'}],50);$('testMsg').textContent='연결됐어요. 이제 AI 기능을 쓸 수 있어요.';track('ai_connected',{prov:st.prov});}
+  catch(e){$('testMsg').textContent=e.msg||'연결하지 못했어요.';}b.disabled=false;};
+$('statsChk').onchange=e=>{st.stats=e.target.checked;ls.set('stats',st.stats?'1':'0');if(st.stats)loadAnalytics();};
+$('wipeBtn').onclick=()=>{['name','age','fut','mode','prov','model','aikey','stats','hello','spkSeen'].forEach(k=>ls.set(k,null));ss.set('aikey',null);
+  Object.assign(st,{photos:{},name:'',age:0,fut:{},prov:'',key:'',model:'',keep:false,raw:null,lm:null,stages:[],photo:null});refreshAI();renderList();fillSettings();$('wipeMsg').textContent='이 기기에 저장된 이름, 나이, 설정, API 키를 모두 지웠어요.';};
+$('setDone').onclick=()=>{hide('setScrim');if(st.q&&!$('scrim').classList.contains('hide'))fillSheet();};
+
+/* ── 내보내기 ── */
+const pad=n=>String(n).padStart(2,'0');
+const fmtD=d=>`${d.getFullYear()}.${pad(d.getMonth()+1)}.${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+const fmtT=d=>`${d.getHours()<12?'오전':'오후'} ${(d.getHours()%12)||12}:${pad(d.getMinutes())}`;
+function exportText(){
+  const q=st.q,first=st.msgs[0]?new Date(st.msgs[0].ts):new Date();
+  const head=`나에게 묻는 질문 — 대화 기록\n저장한 날짜: ${fmtD(new Date())}\n\n질문: ${q.q}\n상황: ${sit(q)}\n대화 상대: ${P(q)}\n\n--------------- ${fmtD(first).slice(0,10)} ---------------\n`;
+  return head+st.msgs.filter(m=>!m.typing&&m.text).map(m=>{const d=new Date(m.ts);
+    if(m.who==='card')return `\n[질문 ${m.n}/${m.N}] ${m.text.replace(/\n/g,' ')}`;
+    if(m.who==='sum')return `\n${m.text}\n`;
+    if(m.who==='sys'||m.who==='stage')return `\n(${m.text.replace(/\n/g,' ')})\n`;
+    return `[${m.who==='me'?ME():P(q)}] [${fmtT(d)}] ${m.text}`;}).join('\n')+'\n';
+}
+$('expBtn').onclick=()=>{$('expPre').textContent=exportText();$('expMsg').textContent='';show('expScrim');};
+$('expClose').onclick=()=>hide('expScrim');
+$('expSave').onclick=async()=>{const d0=new Date(),fname=`나에게묻는질문_${P(st.q).replace(/\s/g,'')}_${d0.getFullYear()}${pad(d0.getMonth()+1)}${pad(d0.getDate())}.txt`;
+  if(st.dl){try{await st.dl.save({filename:fname,data:exportText()});$('expMsg').textContent='저장했어요.';track('export',{how:'file'});}catch(e){$('expMsg').textContent='저장하지 못했어요. 복사하기를 써주세요.';}return;}
+  try{const blob=new Blob([exportText()],{type:'text/plain;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);const d=new Date();a.download=`나에게묻는질문_${P(st.q).replace(/\s/g,'')}_${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}.txt`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);$('expMsg').textContent='저장했어요. 다운로드 폴더를 확인하세요. 저장이 안 되면 복사하기를 써주세요.';track('export',{how:'file'});}catch(e){$('expMsg').textContent='이 화면에서는 저장이 막혀 있어요. 복사하기를 써주세요.';}};
+$('expCopy').onclick=async()=>{try{await navigator.clipboard.writeText(exportText());$('expMsg').textContent='복사했어요. 메모나 카톡에 붙여넣으면 돼요.';track('export',{how:'copy'});}catch(e){const r=document.createRange();r.selectNodeContents($('expPre'));const s=getSelection();s.removeAllRanges();s.addRange(r);$('expMsg').textContent='글을 선택해뒀어요. 길게 눌러 복사하세요.';}};
+
+/* ── 안내 문서 ── */
+const DOCS={
+priv:['개인정보 처리방침',`<p>'나에게 묻는 질문'(이하 '앱')은 이용자의 개인정보를 서버에 수집하거나 저장하지 않도록 만들어졌어요.</p>
+<h4>1. 회원가입과 로그인</h4><p>회원가입, 로그인이 없어요. 이메일, 전화번호 등 연락처를 받지 않아요.</p>
+<h4>2. 이용자 기기에만 저장되는 정보</h4><ul><li>이름(별명), 나이, 미래 설정, 화면 설정</li><li>API 키(이용자가 '기억하기'를 선택한 경우)</li></ul><p>이 정보는 이용자의 브라우저에만 저장되고 운영자에게 전송되지 않아요. 설정의 '내 정보 모두 지우기' 또는 브라우저 데이터 삭제로 즉시 지울 수 있어요.</p>
+<h4>3. 저장하지 않는 정보</h4><p>대화 내용과 사진은 화면에만 존재하며, 기기에도 서버에도 저장하지 않아요. 창을 닫으면 사라져요. 사진 효과는 이용자 기기 안에서만 처리돼요.</p>
+<h4>4. 익명 사용 통계</h4><p>서비스 개선을 위해 방문 수, 머문 시간, 고른 질문의 종류, 보낸 메시지 수 같은 숫자만 수집해요. 대화 내용, 이름, 사진은 포함되지 않으며, 쿠키를 쓰지 않는 분석 도구를 사용하고 IP 주소로 개인을 식별하지 않아요. 설정에서 언제든 참여를 끌 수 있어요.</p>
+<h4>5. AI 연결 시</h4><p>이용자가 직접 AI(Anthropic Claude 또는 OpenAI ChatGPT)를 연결하면, AI 모드의 대화 내용은 이용자 기기에서 해당 회사로 직접 전송되며 운영자를 거치지 않아요. 전송된 내용의 처리는 해당 회사의 개인정보 정책을 따르며, API 이용 요금은 이용자 본인 계정에 청구돼요.</p>
+<h4>6. 이용 연령</h4><p>만 14세 이상만 이용할 수 있어요.</p>
+<h4>7. 문의</h4><p>${CONFIG.contact?esc(CONFIG.contact):'운영자 연락처'}</p>`],
+terms:['이용 안내',`<h4>이 앱은 무엇인가요</h4><p>상상 속의 다른 나와 대화하며 스스로 답을 찾도록 돕는 자기대화 도구예요.</p>
+<h4>상담·치료를 대신하지 않아요</h4><p>이 앱의 대화(AI 대답 포함)는 상상 속 대화이며 의료, 법률, 금융 등 전문 조언이 아니에요. 중요한 결정은 전문가와 상의하세요.</p>
+<h4>힘들 때는</h4><ul><li>자살예방상담전화 109 (24시간)</li><li>정신건강위기상담전화 1577-0199</li><li>긴급한 위험이 있다면 112 또는 119</li></ul>
+<h4>AI 대답에 대해</h4><p>AI 대답은 틀리거나 어색할 수 있어요. 세월 효과는 분위기를 위한 연출이에요.</p>`]
+};
+function openDoc(k){$('docTitle').textContent=DOCS[k][0];$('docBody').innerHTML=DOCS[k][1];show('docScrim');}
+$('privBtn').onclick=()=>openDoc('priv');$('termsBtn').onclick=()=>openDoc('terms');$('docClose').onclick=()=>hide('docScrim');
+$('helloPriv').onclick=()=>openDoc('priv');
+$('helloOk').onclick=()=>{ls.set('hello','1');hide('hello');loadAnalytics();track('first_visit');};
+
+/* ── 새 버전 확인: 다른 사람이 쓰는 중에 수정해도 알려줘요 ── */
+async function checkVersion(){try{const r=await fetch('version.json?t='+Date.now(),{cache:'no-store'});if(!r.ok)return;const j=await r.json();if(j.v&&j.v!==CONFIG.version)show('upd');}catch(e){}}
+$('upd').onclick=()=>{if(!$('conv').classList.contains('hide')&&st.msgs.length>3&&!$('upd').dataset.warned){$('upd').dataset.warned=1;$('upd').textContent='지금 대화가 사라져요. 내보내기 후 다시 누르세요';return;}location.reload();};
+setInterval(()=>{if(document.visibilityState==='visible')checkVersion();},5*60*1000);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')checkVersion();});
+
+/* ── 시작 ── */
+renderMode();renderList();refreshAI();
+if(!ls.get('hello'))show('hello');else loadAnalytics();
+if(window.claude&&window.claude.use){window.claude.use('sample').then(s=>{st.sample=s||null;refreshAI();}).catch(()=>{});window.claude.use('downloads').then(d=>{st.dl=d||null;}).catch(()=>{});}
+}
+</script>
+</body>
+</html>
